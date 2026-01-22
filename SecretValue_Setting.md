@@ -7,7 +7,7 @@ Vite 프로젝트이므로 **클라이언트에 노출되는 값은 `VITE_` 접�
 
 ## 1. Google Gemini
 
-채팅, Veo 비디오, Gemini 이미지, **AI 프로젝트 설계**(`planProjectStructure`)에 사용됩니다.
+채팅, Gemini 이미지, **AI 프로젝트 설계**(`planProjectStructure`)에 사용됩니다.
 
 | 환경 변수 | 설명 | 발급 |
 | :--- | :--- | :--- |

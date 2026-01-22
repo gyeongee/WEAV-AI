@@ -36,8 +36,7 @@
 | **Gemini 3 Flash Preview** | `gemini-3-flash` | `gemini-2.5-flash-lite` | 일반 대화 |
 | **GPT Image 1.5** | `gpt-image-1.5` | `gpt-image-1.5` | DALL·E 이미지 |
 | **Nano Banana (Gemini)** | `nano-banana` | `gemini-2.5-flash-image` | Gemini 이미지 |
-| **SORA** | `sora` | `sora-1.0-turbo` | OpenAI 비디오 |
-| **VEO 3.1** | `veo-3.1` | `veo-3.1-fast-generate-preview` | Google 비디오 |
+| **SORA** | `sora` | `sora-2` | OpenAI 비디오 |
 
 ### 내부 전용 (API 직접 호출)
 

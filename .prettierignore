@@ -1,0 +1,10 @@
+dist/
+node_modules/
+public/
+*.min.js
+*.min.css
+package-lock.json
+coverage/
+.nyc_output/
+.cache/
+.parcel-cache/
