@@ -63,7 +63,7 @@ export const aiService = {
       model_id: 'gemini-3-flash',
       input_text: prompt,
       system_prompt: 'You are an expert AI Project Manager. Always respond in valid JSON format only.',
-      max_output_tokens: 2048
+      max_output_tokens: 1024
     }) as { text?: string };
 
     if (!result.text) throw new Error("Empty response from AI Planner");
@@ -188,7 +188,7 @@ export const aiService = {
         system_prompt: systemInstruction,
         history: historyArray,
         temperature: 0.7,
-        max_output_tokens: 2048
+        max_output_tokens: 1024
       }, { signal }) as { text?: string; error?: string };
 
       if (result.error) {
