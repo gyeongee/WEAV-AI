@@ -19,6 +19,9 @@ interface AuthContextType {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshUserInfo: () => Promise<void>;
+  loginPromptOpen: boolean;
+  openLoginPrompt: () => void;
+  closeLoginPrompt: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -28,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [jwtReady, setJwtReady] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
 
   useEffect(() => {
     // Firebase 인증 상태 확인 (개발/프로덕션 모두)
@@ -66,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('weav_user_info');
         setUserInfo(null);
         setJwtReady(false);
+        setLoginPromptOpen(false);
       }
       setLoading(false);
     });
@@ -85,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // 백엔드 JWT 토큰 발급 먼저 처리
         await userService.verifyFirebaseToken(firebaseUser);
         setJwtReady(true);
+        setLoginPromptOpen(false);
         // Firestore 동기화 제거 (Postgres에서 사용자 프로필 관리)
       }
     } catch (error) {
@@ -111,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUserInfo(null);
       localStorage.removeItem('weav_user_info');
       setJwtReady(false);
+      setLoginPromptOpen(false);
       
       // 로그아웃 후 채팅 상태 초기화는 ChatContext에서 처리
       // 여기서는 사용자 상태만 관리
@@ -136,7 +143,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, userInfo, loading, jwtReady, signIn, signOut, refreshUserInfo }}>
+    <AuthContext.Provider value={{
+      user,
+      userInfo,
+      loading,
+      jwtReady,
+      signIn,
+      signOut,
+      refreshUserInfo,
+      loginPromptOpen,
+      openLoginPrompt: () => setLoginPromptOpen(true),
+      closeLoginPrompt: () => setLoginPromptOpen(false)
+    }}>
       {children}
     </AuthContext.Provider>
   );

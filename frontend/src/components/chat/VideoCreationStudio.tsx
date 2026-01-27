@@ -108,7 +108,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
         setTimeout(onClose, 500);
     };
 
-    const modelKey = selectedModel.model === 'fal-ai/sora-2' ? 'videoPro' : 'videoPro';
+    const modelKey = selectedModel.model === 'fal-ai/sora-2/text-to-video' ? 'videoPro' : 'videoPro';
     const config = MODEL_CONFIGS[modelKey];
 
     // Auto-correct invalid options (e.g. 1080p when only 720p is allowed)
@@ -275,7 +275,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
                                 <div className="flex gap-1 overflow-hidden">
                                     <span className="bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs flex-shrink-0">{videoOptions.resolution}</span>
                                     <span className="bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs flex-shrink-0 hidden xs:inline">{videoOptions.aspectRatio}</span>
-                                    <span className="bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs flex-shrink-0">{videoOptions.duration}</span>
+                                    <span className="bg-white/10 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs flex-shrink-0">{videoOptions.duration}s</span>
                                 </div>
                             )}
                         </div>

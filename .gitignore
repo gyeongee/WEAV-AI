@@ -26,6 +26,7 @@ dist/
 .env.production.local
 # But allow .env.example files
 !.env.example
+!backend/.env.example
 !backend/env.example
 !infra/.env.example
 
@@ -81,6 +82,9 @@ infra/minio-data/
 **/*firebase*service*.json
 **/*-firebase-admin*.json
 **/*firebase-adminsdk*.json
+docs/llms.pdf
+backend/weavai/apps/ai/system_rules.py
+infra/package-lock.json
 
 # SSL/TLS certificates
 *.pem

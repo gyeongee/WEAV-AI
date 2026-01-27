@@ -23,11 +23,19 @@ export interface Message {
   readonly content: string;
   readonly type: MessageType;
   readonly mediaUrl?: string;
+  readonly prompt?: string;
   readonly jobId?: string;
   readonly timestamp: number;
   readonly isStreaming?: boolean;
   readonly progress?: number; // 0-100
   readonly estimatedTime?: string;
+}
+
+export interface ImageEditTarget {
+  readonly messageId: string;
+  readonly imageUrl: string;
+  readonly prompt?: string;
+  readonly createdAt: number;
 }
 
 // Streaming message type

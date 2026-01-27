@@ -5,11 +5,12 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   const env = loadEnv(mode, process.cwd(), '');
+  const devHost = env.VITE_DEV_HOST || 'localhost';
 
   return {
     server: {
       port: 3000,
-      host: '0.0.0.0',
+      host: devHost,
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
         'Cross-Origin-Embedder-Policy': 'unsafe-none'

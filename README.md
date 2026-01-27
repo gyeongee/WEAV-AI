@@ -16,8 +16,8 @@ AI 기반 콘텐츠 생성 플랫폼. 사용자가 목표를 입력하면 AI가 
 -  **비디오 생성**: fal.ai 모델 카탈로그 (비동기 Jobs API)
 -  **폴더·채팅 DB 저장**: 로그인 후 작업 내용 DB 유지, 로그아웃·재로그인 시 복원
 -  **다크/라이트 모드**: 사용자 맞춤형 테마 지원
--  **Google 로그인**: Firebase 인증 + 백엔드 JWT + **사용자·멤버십 DB 저장**
--  **비로그인 둘러보기**: 화면은 모두 공개, 기능 사용 시 로그인/멤버십 유도
+-  **Google 로그인**: Firebase 인증 + 백엔드 JWT + 사용자 DB 저장
+-  **비로그인 둘러보기**: 화면은 모두 공개, 기능 사용 시 로그인 유도
 
 ---
 
@@ -78,9 +78,6 @@ VITE_FIREBASE_STORAGE_BUCKET=...
 VITE_FIREBASE_MESSAGING_SENDER_ID=...
 VITE_FIREBASE_APP_ID=...
 VITE_API_BASE_URL=http://localhost:8080
-# PortOne (결제창용, 공개 식별자)
-VITE_PORTONE_STORE_ID=...
-VITE_PORTONE_CHANNEL_KEY=...
 ```
 
 #### 백엔드 (`infra/.env`)
@@ -106,12 +103,6 @@ MINIO_DATA_DIR=./minio-data
 MINIO_ROOT_USER=admin
 MINIO_ROOT_PASSWORD=your-password
 
-# Billing (PortOne)
-USE_PORTONE=True
-USE_STRIPE=False
-PORTONE_API_SECRET=...
-PORTONE_WEBHOOK_SECRET=...
-FRONTEND_URL=http://localhost:3000
 ```
 
 ### 2. 백엔드 실행
@@ -149,9 +140,9 @@ npm run dev
 ##  주요 API 엔드포인트
 
 ### 인증
-- `POST /api/v1/auth/verify-firebase-token/` - Firebase 토큰 검증, JWT 발급, **사용자·멤버십 DB 저장**
+- `POST /api/v1/auth/verify-firebase-token/` - Firebase 토큰 검증, JWT 발급, 사용자 DB 저장
 - `POST /api/v1/auth/token/refresh/` - JWT 토큰 갱신
-- `GET /api/v1/auth/profile/` - 사용자 프로필·멤버십 조회
+- `GET /api/v1/auth/profile/` - 사용자 프로필 조회
 
 ### 채팅·폴더 (인증 필수)
 - `GET /api/v1/chats/folders/` - 폴더 목록
@@ -166,32 +157,29 @@ npm run dev
 - `POST /api/v1/jobs/` - 작업 생성 → **202 + job_id** (Celery 비동기, 사용자당 최대 4건 동시)
 - `GET /api/v1/jobs/<job_id>/` - 작업 상태·결과 조회 (폴링용)
 
-### 결제 (PortOne, 일회 30일권)
-- `GET /api/v1/billing/plans/` - 플랜 목록
-- `POST /api/v1/billing/payment/prepare/` - 결제 준비 (SDK 파라미터 반환)
-- `POST /api/v1/billing/payment/complete/` - 결제 완료 검증 및 멤버십 반영
-- `POST /api/v1/billing/webhook/` - PortOne 웹훅
-
 ---
+
+##  Mac/Windows 호환성
+
+- Docker Compose 기반으로 macOS/Windows 모두 동일한 흐름 사용
+- Windows는 WSL2 권장 (파일 공유 안정성)
+- 컨테이너 경로(`/app/...`) 기준으로 Firebase 키 경로 설정
 
 ##  현재 진행 상황
 
 ###  완료 (프로덕션 준비 완료)
 - **프론트엔드**: React + TypeScript, 채팅/폴더 UI, 다크/라이트 모드, 비로그인 둘러보기
-- **인증**: Google 로그인 (Firebase + JWT), 사용자·멤버십 DB 저장
-- **멤버십**: 커스텀 User 모델 (free/standard/premium), 만료일 관리, 프리미엄 기능 체크
+- **인증**: Google 로그인 (Firebase + JWT), 사용자 DB 저장
 - **데이터 저장**: 채팅·폴더 DB 저장 (PostgreSQL), 로그아웃 후 재로그인 시 복원
 - **AI 작업**: Jobs API (비동기 Celery), 사용자당 최대 4건 동시 처리, 폴링 지원
 - **AI 모델**:
-  - **텍스트**: fal-ai/any-llm (OpenRouter 모델 선택)
-  - **이미지**: fal.ai 모델 카탈로그 (예: Flux 2, Nano Banana Pro)
-  - **비디오**: fal.ai 모델 카탈로그 (예: Video Pro)
-- **결제**: PortOne 일회 30일권, `/pricing` 페이지, prepare/complete/webhook, Celery 자동복구
+  - **텍스트**: openai/gpt-4o-mini, google/gemini-flash-1.5
+  - **이미지**: fal-ai/flux-2, fal-ai/nano-banana
+  - **비디오**: fal-ai/sora-2/text-to-video
 - **인프라**: Docker Compose (infra), PostgreSQL, Redis, MinIO, Nginx (resolver + 변수), Celery Worker
-- **보안**: AI Gateway (백엔드 라우팅), API 키 서버 전용, 멤버십 기반 프리미엄 기능 제한
+- **보안**: AI Gateway (백엔드 라우팅), API 키 서버 전용
 
 ###  향후 계획
-- 정기결제 (빌링키 + Celery Beat)
 - Rate Limit / Quota 강화
 - 실시간 작업 진행률 UI (선택)
 
@@ -210,8 +198,7 @@ npm run dev
 
 - [배포 가이드](./docs/배포_가이드.md) - Cloudflare Tunnel 배포
 - [프로젝트 문서](./docs/프로젝트_문서.md) - 상세 기술 문서
-- [결제 (PortOne)](./docs/결제_구현_가이드.md) - Billing MVP 설정 및 플로우
-- [빠른 시작](./docs/빠른_시작_가이드.md) - 바로 실행하는 단계별 가이드
+- [빠른 시작 (macOS)](./docs/빠른_시작_가이드_mac.md) - macOS 빠른 실행
 - [테스트 로드맵](./docs/테스트_로드맵.md) - 구조 변경 후 점검 절차
 - [Windows 빠른 실행](./docs/빠른_실행_가이드_win.md) - Windows 환경 실행 가이드
 - [백엔드 README](./backend/README.md) - 백엔드 설정
@@ -219,5 +206,5 @@ npm run dev
 
 ---
 
-**마지막 업데이트**: 2026-01-24  
-**프로젝트 상태**: 프로덕션 준비 완료 
+**마지막 업데이트**: 2026-01-28  
+**프로젝트 상태**: 로컬/테스트 안정화 진행 중

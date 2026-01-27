@@ -47,9 +47,9 @@ const ModelSelectorComponent: React.FC<ModelSelectorProps> = ({ selectedModel, o
       case 'google/gemini-flash-1.5': return <Box size={16} className="text-indigo-400" />;
 
       case 'fal-ai/flux-2': return <Box size={16} className="text-purple-400" />;
-      case 'fal-ai/nano-banana-pro': return <BananaLogo className="w-4 h-4 text-yellow-300" />;
+      case 'fal-ai/nano-banana': return <BananaLogo className="w-4 h-4 text-yellow-300" />;
 
-      case 'fal-ai/sora-2': return <VideoLogo className="w-4 h-4 text-white" />;
+      case 'fal-ai/sora-2/text-to-video': return <VideoLogo className="w-4 h-4 text-white" />;
 
       default: return <Box size={16} className="text-neutral-400" />;
     }

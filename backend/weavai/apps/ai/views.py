@@ -8,12 +8,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .router import AIServiceRouter
+from .system_rules import prepend_model_rule
 from .schemas import TextGenerationRequest
 from .errors import AIServiceError, AIProviderError, AIRequestError
 
 logger = logging.getLogger(__name__)
 router = AIServiceRouter()
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -57,7 +57,8 @@ def complete_chat(request):
         
         # provider는 fal 고정
         
-        # 히스토리 처리: 시스템 프롬프트에 통합 (향후 개선 가능)
+        # 히스토리 처리: 모델별 룰 적용 후 시스템 프롬프트에 통합 (향후 개선 가능)
+        system_prompt = prepend_model_rule(system_prompt, model)
         if history:
             history_text = '\n'.join([
                 f"{'User' if msg.get('role') == 'user' else 'Assistant'}: {msg.get('content', '')}"

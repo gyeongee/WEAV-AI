@@ -10,28 +10,33 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveIndex(
-            model_name='user',
-            name='users_user_membersh_idx',
-        ),
-        migrations.RemoveField(
-            model_name='user',
-            name='membership_type',
-        ),
-        migrations.RemoveField(
-            model_name='user',
-            name='membership_expires_at',
-        ),
-        migrations.RemoveField(
-            model_name='user',
-            name='stripe_customer_id',
-        ),
-        migrations.RemoveField(
-            model_name='user',
-            name='stripe_subscription_id',
-        ),
-        migrations.RemoveField(
-            model_name='user',
-            name='membership_status',
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunSQL(
+                    sql="DROP INDEX IF EXISTS users_user_membersh_idx",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+                migrations.RunSQL(
+                    sql="ALTER TABLE auth_user DROP COLUMN IF EXISTS membership_type",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+                migrations.RunSQL(
+                    sql="ALTER TABLE auth_user DROP COLUMN IF EXISTS membership_expires_at",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+                migrations.RunSQL(
+                    sql="ALTER TABLE auth_user DROP COLUMN IF EXISTS stripe_customer_id",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+                migrations.RunSQL(
+                    sql="ALTER TABLE auth_user DROP COLUMN IF EXISTS stripe_subscription_id",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+                migrations.RunSQL(
+                    sql="ALTER TABLE auth_user DROP COLUMN IF EXISTS membership_status",
+                    reverse_sql=migrations.RunSQL.noop,
+                ),
+            ],
+            state_operations=[],
         ),
     ]

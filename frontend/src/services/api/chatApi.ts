@@ -60,7 +60,11 @@ export const chatApi = {
       system_instruction: payload.system_instruction ?? '',
       recommended_prompts: payload.recommended_prompts ?? [],
     };
-    if (payload.folder_id != null) body.folder_id = payload.folder_id;
+    if (payload.folder_id != null) {
+      body.folder_id = payload.folder_id;
+      // Backward/compat: some backends accept `folder` (UUID string)
+      body.folder = payload.folder_id;
+    }
     const r = (await apiClient.post<unknown>('/api/v1/chats/chats/', body)) as any;
     return mapChat(r);
   },

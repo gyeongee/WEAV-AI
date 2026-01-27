@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -14,13 +14,14 @@ import { ChatView } from '@/components/chat/ChatView';
 import { OnboardingModal } from '@/components/onboarding/OnboardingModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { LoginView } from '@/components/auth/LoginView';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { LoginPromptModal } from '@/components/auth/LoginPromptModal';
 
 import { DEFAULT_PROMPTS } from '@/constants/prompts';
 import { useAppLogic } from '@/hooks/useAppLogic';
 
 // Main Content Component
 const MainLayout: React.FC = () => {
+  const navigate = useNavigate();
   const {
     isMenuOpen, setIsMenuOpen,
     showSettings, setShowSettings,
@@ -30,10 +31,16 @@ const MainLayout: React.FC = () => {
   } = useAppLogic();
 
   const {
-    hasStarted, currentSessionId, activeFolderId, recentChats
+    hasStarted, currentSessionId, activeFolderId, recentChats, deleteAllChats, resetChat
   } = useChatContext();
 
-  const { folderChats } = useFolder();
+  const { folderChats, deleteAllFolders } = useFolder();
+
+  const handleDeleteAllFolders = async () => {
+    await deleteAllFolders();
+    resetChat(null);
+    navigate('/');
+  };
 
   // Header Title Logic
   const getCurrentChatTitle = () => {
@@ -51,8 +58,7 @@ const MainLayout: React.FC = () => {
   const { theme } = useTheme();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-[#050505] text-gray-900 dark:text-white overflow-hidden relative font-sans flex transition-colors duration-300">
-      <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: theme === 'dark' ? 'radial-gradient(circle at 50% 50%, #333 1px, transparent 1px)' : 'radial-gradient(circle at 50% 50%, #ccc 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] overflow-hidden relative font-sans flex transition-colors duration-300">
 
       {showOnboarding && <OnboardingModal onComplete={handleOnboardingComplete} />}
 
@@ -64,7 +70,10 @@ const MainLayout: React.FC = () => {
         customPrompts={customPrompts}
         onSavePrompt={handleSavePrompt}
         onDeletePrompt={handleDeletePrompt}
+        onDeleteAllChats={deleteAllChats}
+        onDeleteAllFolders={handleDeleteAllFolders}
       />
+      <LoginPromptModal />
 
       <Sidebar
         isOpen={isMenuOpen}

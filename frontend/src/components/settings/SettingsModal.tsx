@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, RefreshCcw, User, Shield, Zap, Sparkles, Plus, Trash2, Layout, BookOpen, Palette, Moon, Sun } from 'lucide-react';
+import { X, RefreshCcw, User, Shield, Zap, Sparkles, Plus, Trash2, Layout, BookOpen, Palette, Moon, Sun, MessageSquare } from 'lucide-react';
 import { Persona, PromptTemplate } from '../../types';
 import { DEFAULT_PROMPTS } from '../../constants/prompts';
 import { useTheme, POINT_COLORS } from '../../contexts/ThemeContext';
@@ -12,9 +12,11 @@ interface SettingsModalProps {
   customPrompts: PromptTemplate[];
   onSavePrompt: (prompt: PromptTemplate) => void;
   onDeletePrompt: (id: string) => void;
+  onDeleteAllChats: () => Promise<void> | void;
+  onDeleteAllFolders: () => Promise<void> | void;
 }
 
-type TabType = 'profile' | 'prompts' | 'appearance';
+type TabType = 'profile' | 'prompts' | 'appearance' | 'chat';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,
@@ -23,7 +25,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onRetakeOnboarding,
   customPrompts,
   onSavePrompt,
-  onDeletePrompt
+  onDeletePrompt,
+  onDeleteAllChats,
+  onDeleteAllFolders
 }) => {
     const { theme, setTheme, pointColor, setPointColor } = useTheme();
     const [activeTab, setActiveTab] = useState<TabType>('profile');
@@ -57,6 +61,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     };
 
     const allPrompts = [...DEFAULT_PROMPTS, ...customPrompts];
+    const handleDeleteAllChats = async () => {
+        const ok = window.confirm('모든 채팅방을 삭제할까요? 이 작업은 되돌릴 수 없습니다.');
+        if (!ok) return;
+        await onDeleteAllChats?.();
+    };
+    const handleDeleteAllFolders = async () => {
+        const ok = window.confirm('모든 프로젝트 폴더를 삭제할까요? 폴더 안의 채팅도 함께 삭제됩니다.');
+        if (!ok) return;
+        await onDeleteAllFolders?.();
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -71,15 +85,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-neutral-800 border-b border-gray-200 dark:border-neutral-800 shrink-0">
-                    <h3 className="text-white font-medium text-lg flex items-center gap-2">
+                    <h3 className="text-gray-900 dark:text-white font-medium text-lg flex items-center gap-2">
                         {activeTab === 'profile' && <User size={20} className="text-neutral-400" />}
                         {activeTab === 'prompts' && <BookOpen size={20} className="text-indigo-400" />}
                         {activeTab === 'appearance' && <Palette size={20} className="text-rose-400" />}
-                        {activeTab === 'profile' ? '설정 및 활동' : activeTab === 'prompts' ? '프롬프트 관리' : '테마 및 스타일'}
+                        {activeTab === 'chat' && <MessageSquare size={20} className="text-red-400" />}
+                        {activeTab === 'profile' ? '설정 및 활동' : activeTab === 'prompts' ? '프롬프트 관리' : activeTab === 'appearance' ? '테마 및 스타일' : '채팅 관리'}
                     </h3>
-                    <button 
-                        onClick={onClose} 
-                        className="p-2 text-neutral-500 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-200 dark:text-neutral-500 dark:hover:text-white dark:hover:bg-neutral-800 rounded-lg transition-colors"
                     >
                         <X size={20} />
                     </button>
@@ -88,11 +103,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 {/* Content Container - Column on Mobile, Row on Desktop */}
                 <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
                     {/* Sidebar Tabs - Top Scroll on Mobile, Left Sidebar on Desktop */}
-                    <div className="w-full md:w-48 border-b md:border-b-0 md:border-r border-neutral-800 bg-neutral-900/30 p-2 md:p-4 flex flex-row md:flex-col gap-2 shrink-0 overflow-x-auto md:overflow-visible">
+                    <div className="w-full md:w-48 border-b md:border-b-0 md:border-r border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900/30 p-2 md:p-4 flex flex-row md:flex-col gap-2 shrink-0 overflow-x-auto md:overflow-visible">
                         <button
                             onClick={() => setActiveTab('profile')}
                             className={`flex-1 md:flex-none text-left px-4 py-2 md:py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center md:justify-start gap-2 whitespace-nowrap
-                                ${activeTab === 'profile' ? 'bg-neutral-800 text-white shadow-md' : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200'}
+                                ${activeTab === 'profile' ? 'bg-white text-gray-900 shadow-md border border-gray-200 dark:bg-neutral-800 dark:text-white dark:border-neutral-700' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-200'}
                             `}
                         >
                             <Layout size={16} />
@@ -101,7 +116,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <button
                             onClick={() => setActiveTab('prompts')}
                             className={`flex-1 md:flex-none text-left px-4 py-2 md:py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center md:justify-start gap-2 whitespace-nowrap
-                                ${activeTab === 'prompts' ? 'bg-neutral-800 text-indigo-300 shadow-md border border-indigo-500/10' : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200'}
+                                ${activeTab === 'prompts' ? 'bg-white text-indigo-600 shadow-md border border-indigo-200 dark:bg-neutral-800 dark:text-indigo-300 dark:border-indigo-500/10' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-200'}
                             `}
                         >
                             <Sparkles size={16} />
@@ -110,11 +125,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         <button
                             onClick={() => setActiveTab('appearance')}
                             className={`flex-1 md:flex-none text-left px-4 py-2 md:py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center md:justify-start gap-2 whitespace-nowrap
-                                ${activeTab === 'appearance' ? 'bg-neutral-800 text-rose-300 shadow-md border border-rose-500/10' : 'text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200'}
+                                ${activeTab === 'appearance' ? 'bg-white text-rose-600 shadow-md border border-rose-200 dark:bg-neutral-800 dark:text-rose-300 dark:border-rose-500/10' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-200'}
                             `}
                         >
                             <Palette size={16} />
                             테마 및 스타일
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('chat')}
+                            className={`flex-1 md:flex-none text-left px-4 py-2 md:py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center md:justify-start gap-2 whitespace-nowrap
+                                ${activeTab === 'chat' ? 'bg-white text-red-600 shadow-md border border-red-200 dark:bg-neutral-800 dark:text-red-300 dark:border-red-500/10' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-neutral-200'}
+                            `}
+                        >
+                            <MessageSquare size={16} />
+                            채팅 관리
                         </button>
                     </div>
                     
@@ -376,6 +400,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                                     <p className="text-xs text-neutral-600 mt-3">
                                         포인트 컬러는 버튼, 강조 요소 등에 적용됩니다. 모노크롬 감성을 유지하며 미세한 색상 차이를 제공합니다.
                                     </p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- CHAT MANAGEMENT TAB --- */}
+                        {activeTab === 'chat' && (
+                            <div className="space-y-6 animate-fade-in">
+                                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+                                    <h4 className="text-sm font-bold text-white mb-2">모든 채팅방 삭제</h4>
+                                    <p className="text-xs text-neutral-400 mb-4">
+                                        현재 계정의 모든 채팅방과 대화 기록이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                                    </p>
+                                    <button
+                                        onClick={handleDeleteAllChats}
+                                        className="w-full py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-500 transition-colors flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        <Trash2 size={16} />
+                                        <span>모든 채팅방 삭제</span>
+                                    </button>
+                                </div>
+                                <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
+                                    <h4 className="text-sm font-bold text-white mb-2">모든 프로젝트 폴더 삭제</h4>
+                                    <p className="text-xs text-neutral-400 mb-4">
+                                        모든 프로젝트 폴더와 폴더 내부 채팅이 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                                    </p>
+                                    <button
+                                        onClick={handleDeleteAllFolders}
+                                        className="w-full py-3 bg-red-700 text-white font-bold rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2 text-sm"
+                                    >
+                                        <Trash2 size={16} />
+                                        <span>모든 프로젝트 폴더 삭제</span>
+                                    </button>
+                                </div>
+                                <div className="text-xs text-neutral-500">
+                                    삭제 후에도 폴더는 유지되며, 새 채팅방을 다시 만들 수 있습니다.
                                 </div>
                             </div>
                         )}

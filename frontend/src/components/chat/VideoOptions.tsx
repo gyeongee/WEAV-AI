@@ -27,7 +27,7 @@ export const VideoOptions: React.FC<VideoOptionsProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const modelKey = model.model === 'fal-ai/sora-2' ? 'videoPro' : 'videoPro';
+  const modelKey = model.model === 'fal-ai/sora-2/text-to-video' ? 'videoPro' : 'videoPro';
   const config = MODEL_CONFIGS[modelKey];
 
   const updateOption = <K extends keyof VideoOptions>(key: K, value: VideoOptions[K]) => {
@@ -133,7 +133,7 @@ export const VideoOptions: React.FC<VideoOptionsProps> = ({
                       : 'bg-neutral-900 text-neutral-400 border-transparent hover:bg-neutral-800'
                       }`}
                   >
-                    {duration}
+                    {duration}s
                   </button>
                 ))}
               </div>
@@ -212,9 +212,9 @@ export const VideoOptions: React.FC<VideoOptionsProps> = ({
         {/* Footer Info */}
         <div className="mt-5 pt-3 border-t border-neutral-800/50 flex items-center justify-between text-[10px] text-neutral-500">
           <span>예상 소요 시간: {
-            options.duration === '60s' ? '5분+' :
-              options.duration === '30s' ? '2분' :
-                options.duration === '5s' ? '30초' : '1분'
+            options.duration === '12' ? '약 3분' :
+              options.duration === '8' ? '약 2분' :
+                options.duration === '4' ? '약 1분' : '약 1분'
           }</span>
           <span className="flex items-center gap-1">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />

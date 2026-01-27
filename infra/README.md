@@ -112,5 +112,5 @@ docker compose restart api
 
 ---
 
-**마지막 업데이트**: 2026-01-27
+**마지막 업데이트**: 2026-01-28
 > 기본값은 named volume(`minio_data`)을 사용합니다. 로컬 디렉터리로 바인드하려면 `MINIO_DATA_DIR=./minio-data`로 변경하세요.

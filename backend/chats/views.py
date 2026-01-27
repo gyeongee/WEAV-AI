@@ -1,6 +1,7 @@
 # WEAV AI Chats 앱 뷰
 # 폴더/채팅 세션 CRUD — 사용자별 DB 저장
 
+import uuid
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -62,15 +63,20 @@ def chat_list_or_create(request):
         return Response(serializer.data)
 
     data = {k: v for k, v in request.data.items()}
-    folder_id = data.pop('folder_id', None) or data.pop('folder', None)
+    folder_id = data.pop('folder_id', None)
+    folder_value = data.pop('folder', None)
+    if folder_id is None:
+        folder_id = folder_value
     folder = None
     if folder_id:
         try:
+            uuid.UUID(str(folder_id))
             folder = Folder.objects.get(id=folder_id, user=request.user)
-        except (Folder.DoesNotExist, ValueError):
-            return Response({'detail': '폴더를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-    data['folder'] = folder
-
+        except (ValueError, Folder.DoesNotExist):
+            # Fallback: allow folder name if client passed a label instead of UUID
+            folder = Folder.objects.filter(user=request.user, name=str(folder_id)).order_by('-created_at').first()
+            if not folder:
+                return Response({'detail': '폴더를 찾을 수 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
     serializer = ChatSessionSerializer(data=data)
     serializer.is_valid(raise_exception=True)
     serializer.save(user=request.user, folder=folder)

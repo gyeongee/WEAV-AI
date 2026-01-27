@@ -42,10 +42,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     useEffect(() => {
         localStorage.setItem('weav_theme', theme);
+        const root = document.documentElement;
+        const body = document.body;
         if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
+            root.classList.add('dark');
+            root.style.backgroundColor = '#050505';
+            body.style.backgroundColor = '#050505';
         } else {
-            document.documentElement.classList.remove('dark');
+            root.classList.remove('dark');
+            root.style.backgroundColor = '#ffffff';
+            body.style.backgroundColor = '#ffffff';
         }
     }, [theme]);
 

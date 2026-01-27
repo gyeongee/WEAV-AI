@@ -150,7 +150,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
                     </button>
 
                     <NavItem icon={SquarePen} label="새 채팅" onClick={() => {
-                        resetChat();
+                        resetChat(null);
                         navigate('/');
                         if (window.innerWidth < 768) onToggle();
                     }} />
@@ -161,6 +161,7 @@ const SidebarComponent: React.FC<SidebarProps> = ({
 
       <div className={`flex-1 overflow-hidden transition-opacity duration-300 bg-white dark:bg-neutral-900 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
           <div className={`px-3 h-full overflow-y-auto custom-scrollbar transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-4'}`}>
+                        {user ? (
                         <div className="mt-4 mb-6 min-w-[200px]">
 
                             {/* Folders */}
@@ -197,7 +198,9 @@ const SidebarComponent: React.FC<SidebarProps> = ({
                                                                     e.stopPropagation();
                                                                     // Logic for new chat inside folder handled by Create New Chat + assigning context in future updates
                                                                     // For now simple alert as we removed complex prop drilling
-                                                                    resetChat();
+                                                                    resetChat(folder.id);
+                                                                    navigate('/');
+                                                                    if (window.innerWidth < 768) onToggle();
                                                                     // Ideally need 'setActiveFolder' in Context
                                                                 }}
                                                                 className="p-1.5 hover:bg-neutral-700 rounded-md text-neutral-400 hover:text-white transition-all"
@@ -311,6 +314,11 @@ const SidebarComponent: React.FC<SidebarProps> = ({
                             </div>
 
                         </div>
+                        ) : (
+                            <div className="mt-4 mb-6 min-w-[200px] px-3 py-2 text-xs text-neutral-600">
+                                로그인하면 내 폴더와 채팅 기록이 표시됩니다.
+                            </div>
+                        )}
                     </div>
                 </div>
 

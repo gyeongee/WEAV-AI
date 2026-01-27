@@ -44,9 +44,9 @@ python manage.py runserver
 ##  주요 API 엔드포인트
 
 ### 인증
-- `POST /api/v1/auth/verify-firebase-token/` - Firebase 토큰 검증, JWT 발급, **User·멤버십 DB 저장**
+- `POST /api/v1/auth/verify-firebase-token/` - Firebase 토큰 검증, JWT 발급, 사용자 DB 저장
 - `POST /api/v1/auth/token/refresh/` - JWT 갱신
-- `GET /api/v1/auth/profile/` - 프로필·멤버십 조회
+- `GET /api/v1/auth/profile/` - 프로필 조회
 
 ### 채팅·폴더 (인증 필수)
 - `GET/POST /api/v1/chats/folders/` - 폴더 목록/생성
@@ -91,7 +91,6 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 
 ### User (커스텀 `users.User`)
 - Firebase UID → `username`
-- **멤버십**: `membership_type` (free/standard/premium), `membership_expires_at`
 - **API 키 상태**: 서버에서 fal.ai 키로만 처리
 - `photo_url`, `last_login_at`
 
@@ -116,15 +115,15 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 ##  현재 구현 상태
 
 ###  완료
-- Firebase 토큰 검증, JWT, **User·멤버십 DB 저장**
+- Firebase 토큰 검증, JWT, 사용자 DB 저장
 - **chats** API (폴더·채팅 CRUD)
 - **Jobs** API (목록/생성/상세), **Celery 비동기**, 사용자당 최대 4건
 - fal.ai 통합 텍스트/이미지/비디오 호출 (Jobs 경유)
 - PostgreSQL, Redis, MinIO 연동
 
 ###  진행 중
-- fal.ai 모델별 파라미터 매핑 보강
+- fal.ai 모델별 파라미터 매핑 검증 (비디오 옵션 제한 반영)
 
 ---
 
-**마지막 업데이트**: 2026-01-24
+**마지막 업데이트**: 2026-01-28

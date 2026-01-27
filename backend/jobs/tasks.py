@@ -7,6 +7,7 @@ from django.utils import timezone
 from .models import Job, Artifact
 # from .fal_queue import get_fal_client  # FAL.ai 제외
 from weavai.apps.storage.s3 import S3Storage
+from weavai.apps.ai.system_rules import prepend_model_rule
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +15,6 @@ logger = logging.getLogger(__name__)
 # ===== AI 작업 비동기 처리 =====
 
 MAX_CONCURRENT_JOBS_PER_USER = 4
-
 
 @shared_task(bind=True, max_retries=3)
 def run_ai_job(self, job_id: str) -> None:
@@ -51,6 +51,25 @@ def run_ai_job(self, job_id: str) -> None:
         arguments = dict(job.arguments or {})
         if job.model:
             arguments['model'] = job.model
+
+        # 텍스트 작업: 모델별 룰 적용 후 history를 system_prompt에 병합 (complete_chat과 동일한 방식)
+        if model_type == 'text':
+            arguments['system_prompt'] = prepend_model_rule(arguments.get('system_prompt'), job.model or '')
+            history = arguments.get('history') or []
+            if isinstance(history, list) and history:
+                history_text = '\n'.join([
+                    f"{'User' if msg.get('role') == 'user' else 'Assistant'}: {msg.get('content', '')}"
+                    for msg in history[-5:]
+                    if isinstance(msg, dict)
+                ])
+                if history_text:
+                    system_prompt = arguments.get('system_prompt') or ''
+                    if system_prompt:
+                        system_prompt = f"{system_prompt}\n\n이전 대화:\n{history_text}"
+                    else:
+                        system_prompt = f"이전 대화:\n{history_text}"
+                    arguments['system_prompt'] = system_prompt
+            arguments.pop('history', None)
         
         ai_result = ai_router.route_and_run(
             provider=job.provider,

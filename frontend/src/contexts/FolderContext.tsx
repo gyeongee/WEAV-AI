@@ -12,16 +12,16 @@ const generateWelcomeMessage = (step: StepLike, projectName: string): string => 
         'openai/gpt-4o-mini': 'GPT 5.2 Instant',
         'google/gemini-flash-1.5': 'Gemini 3 Flash',
         'fal-ai/flux-2': 'GPT Image',
-        'fal-ai/nano-banana-pro': 'Nano Banana',
-        'fal-ai/sora-2': 'Sora 2'
+        'fal-ai/nano-banana': 'Nano Banana',
+        'fal-ai/sora-2/text-to-video': 'Sora 2'
     };
 
     const modelDescriptions: Record<string, string> = {
-        'openai/gpt-4o-mini': '빠르고 안정적인 범용 텍스트 생성 모델입니다.',
-        'google/gemini-flash-1.5': '정밀한 추론과 고품질 문장 생성에 적합한 모델입니다.',
-        'fal-ai/flux-2': '텍스트 기반 고품질 이미지 생성에 특화된 모델입니다.',
-        'fal-ai/nano-banana-pro': '빠른 이미지 생성과 일러스트 스타일에 적합한 모델입니다.',
-        'fal-ai/sora-2': '텍스트 기반 고품질 비디오 생성에 최적화된 모델입니다.'
+        'GPT 5.2 Instant': '빠르고 안정적인 범용 텍스트 생성 모델입니다.',
+        'Gemini 3 Flash': '정밀한 추론과 고품질 문장 생성에 적합한 모델입니다.',
+        'GPT Image': '텍스트 기반 고품질 이미지 생성에 특화된 모델입니다.',
+        'Nano Banana': '빠른 이미지 생성과 일러스트 스타일에 적합한 모델입니다.',
+        'Sora 2': '텍스트 기반 고품질 비디오 생성에 최적화된 모델입니다.'
     };
 
     const baseMessage = ` **${projectName}** 프로젝트의 **${step.title}** 단계에 오신 것을 환영합니다!
@@ -95,13 +95,13 @@ const generateRecommendedPrompts = (step: any, projectName: string): string[] =>
             `${project} 관련 시각 자료를 고화질로 생성해주세요`
         ],
 
-        'fal-ai/nano-banana-pro': ({ title, project }) => [
+        'fal-ai/nano-banana': ({ title, project }) => [
             `${project} 프로젝트의 ${title} 작업을 위한 간단한 시각 자료를 만들어주세요`,
             `${title} 작업에 필요한 아이콘이나 심볼을 디자인해주세요`,
             `${project} 관련 아이디어를 시각적으로 표현해주세요`
         ],
 
-        'fal-ai/sora-2': ({ title, project }) => [
+        'fal-ai/sora-2/text-to-video': ({ title, project }) => [
             `"${project}" 프로젝트의 ${title} 작업을 동영상으로 만들어주세요`,
             `${title} 작업의 과정을 영상으로 시각화해주세요`,
             `${project} 관련 스토리를 동영상 콘텐츠로 제작해주세요`
@@ -127,16 +127,18 @@ interface FolderContextType {
     createFolder: (name: string, type: 'custom') => void | Promise<void>;
     createAIFolder: (goal: string) => Promise<void>;
     deleteFolder: (folderId: string) => void;
+    deleteAllFolders: () => Promise<void>;
     addChatToFolder: (folderId: string, chat: ChatSession) => void;
     removeChatFromFolder: (folderId: string, chatId: string) => void;
     updateFolderChat: (folderId: string, chatId: string, updates: Partial<ChatSession>) => void;
+    clearAllChats: () => void;
     isGeneratingFolder: boolean;
 }
 
 const FolderContext = createContext<FolderContextType | null>(null);
 
 export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, loading: authLoading, jwtReady } = useAuth();
+    const { user, loading: authLoading, jwtReady, openLoginPrompt } = useAuth();
     const [folders, setFolders] = useState<Folder[]>([]);
     const [folderChats, setFolderChats] = useState<Record<string, ChatSession[]>>({});
     const [isGeneratingFolder, setIsGeneratingFolder] = useState(false);
@@ -175,7 +177,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const createFolder = async (name: string, type: 'custom') => {
         if (!user || !jwtReady) {
-            toast.error('로그인이 필요한 기능입니다.');
+            openLoginPrompt();
             return;
         }
         try {
@@ -190,19 +192,22 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const createAIFolder = async (goal: string) => {
         if (!user || !jwtReady) {
-            toast.error('로그인이 필요한 기능입니다.');
+            openLoginPrompt();
             return;
         }
         setIsGeneratingFolder(true);
+        let createdFolderId: string | null = null;
+        const createdChatIds: string[] = [];
         try {
             const plan = await aiService.planProjectStructure(goal, user);
             const f = await chatApi.createFolder(plan.projectName, 'shorts-workflow');
+            createdFolderId = f.id;
             const chats: ChatSession[] = [];
 
             for (let i = 0; i < plan.steps.length; i++) {
                 const step = plan.steps[i];
                 if (!step) continue;
-                let si = step.systemInstruction;
+                let si = step.systemInstruction || `목표: "${goal}"에 대해 ${step.title} 작업을 수행해 주세요.`;
                 if (i < plan.steps.length - 1) {
                     const next = plan.steps[i + 1];
                     si += `\n\n 다음 단계 안내: 이 프로젝트는 총 ${plan.steps.length}단계로 구성되어 있으며, 다음 단계는 "${next?.title ?? ''}"입니다. 현재 단계의 결과를 다음 단계에서 최대한 활용할 수 있도록 체계적이고 구체적인 답변을 제공해주세요.`;
@@ -224,6 +229,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     system_instruction: si,
                     recommended_prompts: generateRecommendedPrompts(step, plan.projectName)
                 });
+                createdChatIds.push(c.id);
                 chats.push({ ...c, folderId: f.id });
             }
 
@@ -231,6 +237,17 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             setFolderChats(prev => ({ ...prev, [f.id]: chats }));
             toast.success('AI 프로젝트가 성공적으로 설계되었습니다.');
         } catch (e: any) {
+            // Best-effort cleanup to avoid orphan folders/chats
+            for (const chatId of createdChatIds) {
+                try {
+                    await chatApi.deleteChat(chatId);
+                } catch {}
+            }
+            if (createdFolderId) {
+                try {
+                    await chatApi.deleteFolder(createdFolderId);
+                } catch {}
+            }
             const msg = e?.message === '로그인이 필요한 기능입니다.' ? '로그인 후 이용 가능한 기능입니다.' : (e?.message || 'AI 프로젝트 설계 중 오류가 발생했습니다.');
             toast.error(msg);
         } finally {
@@ -251,6 +268,38 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } catch (e: any) {
             toast.error(e?.message || '폴더 삭제에 실패했습니다.');
         }
+    };
+
+    const deleteAllFolders = async () => {
+        if (!user || !jwtReady) {
+            openLoginPrompt();
+            return;
+        }
+        try {
+            const list = await chatApi.getFolders();
+            for (const f of list) {
+                await chatApi.deleteFolder(f.id);
+            }
+            setFolders([]);
+            setFolderChats({});
+            for (const timer of Object.values(persistTimeoutRef.current)) {
+                clearTimeout(timer);
+            }
+            persistTimeoutRef.current = {};
+            toast.success('모든 프로젝트 폴더가 삭제되었습니다.');
+        } catch (e: any) {
+            toast.error(e?.message || '프로젝트 폴더 삭제에 실패했습니다.');
+        }
+    };
+
+    const clearAllChats = () => {
+        setFolderChats(prev => {
+            const next: Record<string, ChatSession[]> = {};
+            for (const key of Object.keys(prev)) {
+                next[key] = [];
+            }
+            return next;
+        });
     };
 
     const addChatToFolder = (folderId: string, chat: ChatSession) => {
@@ -301,9 +350,11 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             createFolder,
             createAIFolder,
             deleteFolder,
+            deleteAllFolders,
             addChatToFolder,
             removeChatFromFolder,
             updateFolderChat,
+            clearAllChats,
             isGeneratingFolder
         }}>
             {children}

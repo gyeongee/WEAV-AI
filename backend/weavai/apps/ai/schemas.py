@@ -10,7 +10,7 @@ class TextGenerationRequest(BaseModel):
     """텍스트 생성 요청 스키마"""
 
     input_text: str = Field(..., min_length=1, max_length=int(os.getenv('MAX_TEXT_CHARS', '8000')))
-    system_prompt: Optional[str] = Field(None, max_length=2000)
+    system_prompt: Optional[str] = Field(None, max_length=3000)
     temperature: Optional[float] = Field(0.7, ge=0.0, le=2.0)
     max_output_tokens: Optional[int] = Field(
         int(os.getenv('MAX_OUTPUT_TOKENS', '1024')),
@@ -47,8 +47,8 @@ class VideoGenerationRequest(BaseModel):
     """비디오 생성 요청 스키마"""
 
     prompt: str = Field(..., min_length=1, max_length=1000)
-    duration: Optional[str] = Field("8s", pattern=r'^\d+s$')
-    resolution: Optional[str] = Field("720p", pattern=r'^(720p|1080p|4K)$')
-    aspect_ratio: Optional[str] = Field("16:9", pattern=r'^(16:9|9:16|1:1|3:4)$')
-    style: Optional[str] = Field("realistic", pattern=r'^(realistic|cinematic|animated|cartoon|anime)$')
+    duration: Optional[str] = Field("8", pattern=r'^(4|8|12)$')
+    resolution: Optional[str] = Field("720p", pattern=r'^(720p)$')
+    aspect_ratio: Optional[str] = Field("16:9", pattern=r'^(16:9|9:16)$')
+    style: Optional[str] = Field("realistic", max_length=50)
     model: Optional[str] = Field(None, max_length=100)

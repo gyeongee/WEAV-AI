@@ -22,7 +22,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const {
         messages, inputValue, setInputValue, selectedModel, setSelectedModel,
         isLoading, sendMessage, stopGeneration, loadChatSession, currentSessionId, hasStarted,
-        videoOptions, setVideoOptions, recentChats
+        videoOptions, setVideoOptions, recentChats, imageEditTarget, clearImageEditTarget
     } = useChatContext();
 
     const [showPrompts, setShowPrompts] = useState(true);
@@ -45,18 +45,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
     useEffect(() => {
         if (id && id !== currentSessionId) {
+            console.log('[ChatDebug] ChatView loadChatSession', { id, currentSessionId, messages: messages.length, hasStarted });
             loadChatSession(id);
         }
     }, [id, currentSessionId, loadChatSession]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        console.log('[ChatDebug] ChatView render', { messages: messages.length, hasStarted, currentSessionId });
     }, [messages]);
+
+    const shouldShowMessages = hasStarted || messages.length > 0;
 
     return (
         <>
             <main className="flex-1 w-full max-w-5xl mx-auto flex flex-col relative z-10">
-                {!hasStarted ? (
+                {!shouldShowMessages ? (
                     <WelcomeScreen />
                 ) : (
                     <div className="flex-1 overflow-y-auto px-4 pt-20 pb-40 custom-scrollbar">
@@ -81,6 +85,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 prompts={allPrompts}
                 videoOptions={videoOptions}
                 onVideoOptionsChange={setVideoOptions}
+                imageEditTarget={imageEditTarget}
+                onClearImageEditTarget={clearImageEditTarget}
                 recommendedPrompts={hasStarted && messages.length === 1 ? currentSession?.recommendedPrompts : undefined}
                 showRecommendedPrompts={hasStarted && messages.length === 1 && showPrompts && !!currentSession?.recommendedPrompts}
                 onCloseRecommendedPrompts={() => setShowPrompts(false)}
