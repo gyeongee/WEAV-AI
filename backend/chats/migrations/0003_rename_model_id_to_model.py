@@ -3,6 +3,14 @@
 from django.db import migrations
 
 
+def rename_model_id_column(apps, schema_editor):
+    table = 'chats_chatsession'
+    with schema_editor.connection.cursor() as cursor:
+        columns = [c.name for c in schema_editor.connection.introspection.get_table_description(cursor, table)]
+    if 'model_id' in columns:
+        schema_editor.execute(f'ALTER TABLE {table} RENAME COLUMN model_id TO model')
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,9 +18,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RenameField(
-            model_name='chatsession',
-            old_name='model_id',
-            new_name='model',
-        ),
+        migrations.RunPython(rename_model_id_column, migrations.RunPython.noop),
     ]
