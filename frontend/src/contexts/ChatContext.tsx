@@ -96,6 +96,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     const abortControllerRef = useRef<AbortController | null>(null);
+    const textJobControllersRef = useRef<Map<string, AbortController>>(new Map());
 
     const recentPersistRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -173,6 +174,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last && last.role === 'model' && last.isStreaming) {
+                    if (last.jobId) {
+                        const controller = textJobControllersRef.current.get(last.jobId);
+                        if (controller) {
+                            controller.abort();
+                            textJobControllersRef.current.delete(last.jobId);
+                        }
+                    }
                     return prev.map(m => m.id === last.id ? { ...m, isStreaming: false, content: m.content + " [중단됨]" } : m);
                 }
                 return prev;
@@ -194,8 +202,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const loadChatSession = (sessionId: string, folderId?: string) => {
-        stopGeneration();
-
         let session: ChatSession | undefined;
 
         if (folderId) {
@@ -227,6 +233,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const model = MODELS.find(m => m.model === session!.model) || MODELS[0];
             setSelectedModel(model);
             setInputValue('');
+
+            // Resume any pending text jobs in this session
+            const pending = session.messages.filter(m => m.isStreaming && m.jobId);
+            if (pending.length > 0) {
+                pending.forEach(msg => {
+                    if (msg.jobId) {
+                        startTextJobPolling(msg.jobId, msg.id, session.id, folderId || null);
+                    }
+                });
+            }
         } else {
             toast.error("채팅 세션을 찾을 수 없습니다.");
             navigate('/'); // Redirect to home if not found
@@ -245,6 +261,77 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             toast.info('채팅이 삭제되었습니다.');
         } catch (e: any) {
             toast.error(e?.message || '채팅 삭제에 실패했습니다.');
+        }
+    };
+
+    const updateSessionMessages = async (
+        sessionId: string,
+        folderId: string | null,
+        updater: (messages: Message[]) => Message[]
+    ) => {
+        if (currentSessionId === sessionId) {
+            setMessages(prev => updater(prev));
+            return;
+        }
+
+        if (folderId) {
+            const chats = folderChats[folderId] || [];
+            const target = chats.find(c => c.id === sessionId);
+            if (target) {
+                const nextMessages = updater(target.messages as Message[]);
+                updateFolderChat(folderId, sessionId, { messages: nextMessages as any });
+                await chatApi.updateChat(sessionId, { messages: nextMessages as any });
+            }
+            return;
+        }
+
+        const target = recentChats.find(c => c.id === sessionId);
+        if (target) {
+            const nextMessages = updater(target.messages as Message[]);
+            setRecentChats(prev => prev.map(c => c.id === sessionId ? { ...c, messages: nextMessages as any } : c));
+            await chatApi.updateChat(sessionId, { messages: nextMessages as any });
+        }
+    };
+
+    const startTextJobPolling = async (jobId: string, botMessageId: string, sessionId: string, folderId: string | null) => {
+        if (textJobControllersRef.current.has(jobId)) return;
+        const controller = new AbortController();
+        textJobControllersRef.current.set(jobId, controller);
+
+        try {
+            const maxWaitMs = 5 * 60 * 1000;
+            const startedAt = Date.now();
+            const pollIntervalMs = 1500;
+            while (true) {
+                if (controller.signal.aborted) break;
+                if (Date.now() - startedAt > maxWaitMs) {
+                    throw new Error('텍스트 생성 시간이 초과되었습니다.');
+                }
+                const detail = await aiService.getJob(jobId, controller.signal);
+                if (detail.status === 'COMPLETED') {
+                    const text = detail.result?.text || '';
+                    await updateSessionMessages(sessionId, folderId, prev =>
+                        prev.map(m => m.id === botMessageId ? { ...m, content: text || '응답이 비어있습니다.', isStreaming: false } : m)
+                    );
+                    break;
+                }
+                if (detail.status === 'FAILED') {
+                    await updateSessionMessages(sessionId, folderId, prev =>
+                        prev.map(m => m.id === botMessageId ? { ...m, content: detail.error || '텍스트 생성에 실패했습니다.', isStreaming: false } : m)
+                    );
+                    break;
+                }
+                await new Promise(r => setTimeout(r, pollIntervalMs));
+            }
+        } catch (e: any) {
+            if (!controller.signal.aborted) {
+                const message = errorToMessage(e);
+                await updateSessionMessages(sessionId, folderId, prev =>
+                    prev.map(m => m.id === botMessageId ? { ...m, content: `[${message}]`, isStreaming: false } : m)
+                );
+            }
+        } finally {
+            textJobControllersRef.current.delete(jobId);
         }
     };
 
@@ -303,12 +390,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const signal = abortControllerRef.current.signal;
 
         const botMessageId = (Date.now() + 1).toString();
-        const addBotPlaceholder = (type: 'text' | 'image' | 'video', content: string) => {
+        const addBotPlaceholder = (type: 'text' | 'image' | 'video', content: string, jobId?: string) => {
             setMessages(prev => [...prev, {
                 id: botMessageId,
                 role: 'model',
                 content,
                 type,
+                jobId,
                 timestamp: Date.now(),
                 isStreaming: true,
                 ...(type === 'video' && { progress: 0, estimatedTime: '3분' })
@@ -393,19 +481,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     ...m, mediaUrl: imageUrl || undefined, content: imageUrl ? '이미지가 생성되었습니다.' : '실패했습니다.', type: 'image', isStreaming: false
                 } : m));
             } else {
-                addBotPlaceholder('text', '');
-                let fullText = '';
-                // Pass user to backend for permission check
-                const stream = aiService.generateTextStream(selectedModel, promptToSend, messages, systemInstruction, user, signal);
-
-                for await (const chunk of stream) {
-                    if (signal.aborted) break;
-                    fullText += chunk;
-                    setMessages(prev => prev.map(m => m.id === botMessageId ? { ...m, content: fullText } : m));
-                }
-                if (!signal.aborted) {
-                    setMessages(prev => prev.map(m => m.id === botMessageId ? { ...m, isStreaming: false } : m));
-                }
+                const jobId = await aiService.createTextJob(selectedModel, promptToSend, messages, systemInstruction, signal);
+                addBotPlaceholder('text', '', jobId);
+                await startTextJobPolling(jobId, botMessageId, effectiveSessionId!, activeFolderId || null);
             }
         } catch (error: any) {
             if (error.name !== 'AbortError') {
@@ -420,6 +498,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             abortControllerRef.current = null;
         }
     };
+
 
     return (
         <ChatContext.Provider value={{

@@ -66,6 +66,44 @@ export const aiService = {
     let text = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
     return JSON.parse(text);
   },
+  createTextJob: async (
+    model: AIModel,
+    prompt: string,
+    history: Message[] = [],
+    systemInstruction?: string,
+    signal?: AbortSignal
+  ): Promise<string> => {
+    const historyArray = history
+      .filter(msg => msg.type === 'text' && !msg.isStreaming && msg.content.trim() !== '')
+      .map(msg => ({
+        role: msg.role === 'model' ? 'assistant' : 'user',
+        content: msg.content
+      }));
+
+    const job = await apiClient.post('/api/v1/jobs/', {
+      provider: model.provider || 'fal',
+      model: model.model,
+      arguments: {
+        input_text: prompt,
+        system_prompt: systemInstruction,
+        history: historyArray,
+        temperature: 0.7,
+        max_output_tokens: 1024
+      },
+      store_result: true
+    }, { signal }) as { id?: string };
+
+    if (!job.id) throw new Error('작업 ID를 받지 못했습니다.');
+    return job.id;
+  },
+
+  getJob: async (jobId: string, signal?: AbortSignal): Promise<{ status: string; result?: { text?: string; url?: string; type?: string }; error?: string }> => {
+    return (await apiClient.get(`/api/v1/jobs/${jobId}/`, { signal })) as {
+      status: string;
+      result?: { text?: string; url?: string; type?: string };
+      error?: string;
+    };
+  },
 
   /**
    * Generate Video (백엔드 Jobs API — 비동기, 폴링)

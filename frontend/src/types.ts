@@ -23,6 +23,7 @@ export interface Message {
   readonly content: string;
   readonly type: MessageType;
   readonly mediaUrl?: string;
+  readonly jobId?: string;
   readonly timestamp: number;
   readonly isStreaming?: boolean;
   readonly progress?: number; // 0-100
