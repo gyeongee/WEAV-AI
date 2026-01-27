@@ -28,23 +28,25 @@ class JobCreateSerializer(serializers.ModelSerializer):
     새 작업을 생성할 때 사용하는 입력 데이터 검증
     """
 
+    model = serializers.CharField()
+
     class Meta:
         model = Job
         fields = [
-            'provider', 'model_id', 'arguments', 'store_result'
+            'provider', 'model', 'arguments', 'store_result'
         ]
 
     def validate_provider(self, value):
         """지원하는 제공자인지 검증"""
-        supported_providers = ['fal', 'openai', 'gemini']
+        supported_providers = ['fal']
         if value not in supported_providers:
             raise serializers.ValidationError(f"지원하지 않는 제공자입니다: {value}. 지원: {supported_providers}")
         return value
 
-    def validate_model_id(self, value):
-        """유효한 모델 ID인지 기본 검증"""
+    def validate_model(self, value):
+        """유효한 모델명인지 기본 검증"""
         if not value or len(value.strip()) == 0:
-            raise serializers.ValidationError("model_id는 필수입니다")
+            raise serializers.ValidationError("model은 필수입니다")
         return value.strip()
 
     def validate_arguments(self, value):
@@ -63,12 +65,13 @@ class JobDetailSerializer(serializers.ModelSerializer):
 
     artifacts = ArtifactSerializer(many=True, read_only=True)
     duration = serializers.SerializerMethodField()
+    model = serializers.CharField()
 
     class Meta:
         model = Job
         fields = [
             'id', 'created_at', 'updated_at', 'status', 'provider',
-            'model_id', 'arguments', 'store_result', 'artifacts',
+            'model', 'arguments', 'store_result', 'artifacts',
             'error', 'duration'
         ]
         read_only_fields = [
@@ -88,12 +91,13 @@ class JobListSerializer(serializers.ModelSerializer):
     """
 
     artifact_count = serializers.SerializerMethodField()
+    model = serializers.CharField()
 
     class Meta:
         model = Job
         fields = [
             'id', 'created_at', 'status', 'provider',
-            'model_id', 'artifact_count'
+            'model', 'artifact_count'
         ]
 
     def get_artifact_count(self, obj):

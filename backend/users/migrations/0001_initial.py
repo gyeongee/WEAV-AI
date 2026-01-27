@@ -1,4 +1,4 @@
-# Generated manually for custom User model with membership
+# Generated manually for custom User model
 
 import django.contrib.auth.models
 import django.contrib.auth.validators
@@ -29,10 +29,6 @@ class Migration(migrations.Migration):
                 ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('membership_type', models.CharField(choices=[('free', '무료'), ('standard', '스탠다드'), ('premium', '프리미엄')], db_index=True, default='free', help_text='멤버십 타입', max_length=20)),
-                ('membership_expires_at', models.DateTimeField(blank=True, help_text='멤버십 만료 시각 (null이면 무기한)', null=True)),
-                ('has_openai_key', models.BooleanField(default=False, help_text='OpenAI API 키 보유 여부')),
-                ('has_gemini_key', models.BooleanField(default=False, help_text='Gemini API 키 보유 여부')),
                 ('photo_url', models.URLField(blank=True, help_text='프로필 사진 URL', null=True)),
                 ('last_login_at', models.DateTimeField(blank=True, help_text='마지막 로그인 시각', null=True)),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.group', verbose_name='groups')),
@@ -46,9 +42,5 @@ class Migration(migrations.Migration):
             managers=[
                 ('objects', django.contrib.auth.models.UserManager()),
             ],
-        ),
-        migrations.AddIndex(
-            model_name='user',
-            index=models.Index(fields=['membership_type', 'membership_expires_at'], name='users_user_membersh_idx'),
         ),
     ]

@@ -37,7 +37,6 @@ INSTALLED_APPS = [
     # Local apps
     'users',
     'ai_services',
-    'payments',
 ]
 
 MIDDLEWARE = [
@@ -170,10 +169,4 @@ AWS_LOCATION = 'media'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # AI Service API Keys
-OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
-
-# Stripe (Payments)
-STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
-STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
-STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
+FAL_KEY = config('FAL_KEY', default='')

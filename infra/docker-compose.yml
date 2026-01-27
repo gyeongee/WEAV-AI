@@ -125,13 +125,14 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-weavai-files}
       # AI 서비스
       FAL_KEY: ${FAL_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-4o-mini}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GEMINI_TEXT_MODEL: ${GEMINI_TEXT_MODEL:-gemini-1.5-flash}
+      FAL_TEXT_ENDPOINT: ${FAL_TEXT_ENDPOINT:-fal-ai/any-llm}
+      FAL_TEXT_DEFAULT_MODEL: ${FAL_TEXT_DEFAULT_MODEL:-meta-llama/llama-4-maverick}
+      FAL_IMAGE_MODEL_FLUX: ${FAL_IMAGE_MODEL_FLUX:-fal-ai/flux-2}
+      FAL_IMAGE_MODEL_BANANA: ${FAL_IMAGE_MODEL_BANANA:-fal-ai/nano-banana-pro}
+      FAL_VIDEO_MODEL_PRO: ${FAL_VIDEO_MODEL_PRO:-fal-ai/sora-2}
       # Firebase Admin
       FIREBASE_SERVICE_ACCOUNT_KEY_PATH: ${FIREBASE_SERVICE_ACCOUNT_KEY_PATH:-}
-      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
+      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-fal}
       MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
       MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
       # Billing (PortOne)
@@ -193,13 +194,14 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-weavai-files}
       # AI 서비스
       FAL_KEY: ${FAL_KEY}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_TEXT_MODEL: ${OPENAI_TEXT_MODEL:-gpt-4o-mini}
-      GEMINI_API_KEY: ${GEMINI_API_KEY}
-      GEMINI_TEXT_MODEL: ${GEMINI_TEXT_MODEL:-gemini-1.5-flash}
+      FAL_TEXT_ENDPOINT: ${FAL_TEXT_ENDPOINT:-fal-ai/any-llm}
+      FAL_TEXT_DEFAULT_MODEL: ${FAL_TEXT_DEFAULT_MODEL:-meta-llama/llama-4-maverick}
+      FAL_IMAGE_MODEL_FLUX: ${FAL_IMAGE_MODEL_FLUX:-fal-ai/flux-2}
+      FAL_IMAGE_MODEL_BANANA: ${FAL_IMAGE_MODEL_BANANA:-fal-ai/nano-banana-pro}
+      FAL_VIDEO_MODEL_PRO: ${FAL_VIDEO_MODEL_PRO:-fal-ai/sora-2}
       # Firebase Admin
       FIREBASE_SERVICE_ACCOUNT_KEY_PATH: ${FIREBASE_SERVICE_ACCOUNT_KEY_PATH:-}
-      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-openai}
+      AI_PROVIDER_DEFAULT: ${AI_PROVIDER_DEFAULT:-fal}
       MAX_TEXT_CHARS: ${MAX_TEXT_CHARS:-8000}
       MAX_OUTPUT_TOKENS: ${MAX_OUTPUT_TOKENS:-1024}
       # Billing (PortOne) - Celery task에서 결제 조회 API 호출용

@@ -17,7 +17,7 @@ class TextGenerationRequest(BaseModel):
         ge=1,
         le=int(os.getenv('MAX_OUTPUT_TOKENS', '4096'))
     )
-    model_id: Optional[str] = Field(None, max_length=100)  # 모델 ID (선택)
+    model: Optional[str] = Field(None, max_length=100)
 
     @field_validator('input_text')
     @classmethod
@@ -40,7 +40,7 @@ class ImageGenerationRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=1000)
     size: Optional[str] = Field("1024x1024", pattern=r'^\d+x\d+$')
     quality: Optional[str] = Field("standard", pattern=r'^(standard|hd)$')
-    model_id: Optional[str] = Field(None, max_length=100)  # 모델 ID (선택, nano-banana 등)
+    model: Optional[str] = Field(None, max_length=100)
 
 
 class VideoGenerationRequest(BaseModel):
@@ -51,3 +51,4 @@ class VideoGenerationRequest(BaseModel):
     resolution: Optional[str] = Field("720p", pattern=r'^(720p|1080p|4K)$')
     aspect_ratio: Optional[str] = Field("16:9", pattern=r'^(16:9|9:16|1:1|3:4)$')
     style: Optional[str] = Field("realistic", pattern=r'^(realistic|cinematic|animated|cartoon|anime)$')
+    model: Optional[str] = Field(None, max_length=100)

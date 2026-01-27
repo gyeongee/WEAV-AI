@@ -38,14 +38,14 @@ class FalQueueClient:
             'Content-Type': 'application/json',
         })
 
-    def submit_job(self, model_id: str, arguments: Dict[str, Any],
+    def submit_job(self, model: str, arguments: Dict[str, Any],
                    webhook_url: str = None, webhook_secret: str = None,
                    object_lifecycle: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         새 작업을 FAL.ai Queue에 제출
 
         Args:
-            model_id: AI 모델 ID (예: 'fal-ai/fast-sdxl')
+            model: AI 모델명 (예: 'fal-ai/flux-2')
             arguments: 모델 입력 파라미터
             webhook_url: 작업 완료 시 호출할 웹훅 URL
             webhook_secret: 웹훅 서명용 시크릿
@@ -58,7 +58,7 @@ class FalQueueClient:
             requests.RequestException: API 호출 실패
             ValueError: 잘못된 응답
         """
-        url = f"{self.BASE_URL}/{model_id}"
+        url = f"{self.BASE_URL}/{model}"
 
         # 요청 데이터 구성
         data = {
@@ -76,7 +76,7 @@ class FalQueueClient:
         if object_lifecycle:
             headers["X-Fal-Object-Lifecycle-Preference"] = json.dumps(object_lifecycle)
 
-        logger.info(f"FAL.ai 작업 제출: {model_id}")
+        logger.info(f"FAL.ai 작업 제출: {model}")
         logger.debug(f"요청 데이터: {data}")
 
         try:

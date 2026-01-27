@@ -34,7 +34,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('title', models.CharField(max_length=512)),
                 ('messages', models.JSONField(default=list)),
-                ('model_id', models.CharField(default='gpt-5.2-instant', max_length=128)),
+                ('model', models.CharField(default='openai/gpt-4o-mini', max_length=128)),
                 ('system_instruction', models.TextField(blank=True)),
                 ('recommended_prompts', models.JSONField(blank=True, default=list)),
                 ('last_modified', models.DateTimeField(auto_now=True)),

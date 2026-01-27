@@ -50,7 +50,7 @@ class ChatSession(models.Model):
     )
     title = models.CharField(max_length=512)
     messages = models.JSONField(default=list)  # [{ id, role, content, type, ... }]
-    model_id = models.CharField(max_length=128, default='gpt-5.2-instant')
+    model = models.CharField(max_length=128, default='openai/gpt-4o-mini')
     system_instruction = models.TextField(blank=True)
     recommended_prompts = models.JSONField(default=list, blank=True)  # AI 폴더용
     last_modified = models.DateTimeField(auto_now=True)

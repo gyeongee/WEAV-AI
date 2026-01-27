@@ -45,7 +45,7 @@ const ChatContext = createContext<ChatContextType | null>(null);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const navigate = useNavigate();
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, jwtReady } = useAuth();
     const { addChatToFolder, updateFolderChat, folderChats, removeChatFromFolder } = useFolder();
 
     // Persisted Recent Chats (사용자별로 분리)
@@ -53,7 +53,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 사용자 변경 시 초기화 및 최근 채팅 DB 로드
     useEffect(() => {
-        if (authLoading) return;
+        if (authLoading || !jwtReady) return;
         if (!user) {
             setMessages([]);
             setRecentChats([]);
@@ -75,7 +75,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
         })();
         return () => { ok = false; };
-    }, [authLoading, user?.uid]);
+    }, [authLoading, jwtReady, user?.uid]);
 
     // Current Chat UI State
     const [messages, setMessages] = useState<Message[]>([]);
@@ -102,9 +102,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const errorToMessage = (error: unknown): string => {
         if (error instanceof APIError) {
             const data: any = error.data || {};
-            if (error.status === 403 && data.membership_required) {
-                return '이 기능은 멤버십이 필요합니다.';
-            }
             if (error.status === 429) {
                 return '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.';
             }
@@ -134,7 +131,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const sessionUpdate = {
             messages,
             lastModified: now,
-            modelId: selectedModel.id,
+            model: selectedModel.model,
             systemInstruction
         };
 
@@ -150,7 +147,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 try {
                     await chatApi.updateChat(currentSessionId, {
                         messages: sessionUpdate.messages as any,
-                        model_id: selectedModel.id,
+                        model: selectedModel.model,
                         system_instruction: systemInstruction ?? ''
                     });
                 } catch (e) {
@@ -227,7 +224,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCurrentSessionId(session.id);
             setActiveFolderId(folderId || null);
 
-            const model = MODELS.find(m => m.id === session!.modelId) || MODELS[0];
+            const model = MODELS.find(m => m.model === session!.model) || MODELS[0];
             setSelectedModel(model);
             setInputValue('');
         } else {
@@ -256,7 +253,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!promptToSend.trim() || isLoading) return;
 
         // 로그인 확인 (DB 저장 필요)
-        if (!user) {
+        if (!user || !jwtReady) {
             toast.error('로그인이 필요한 기능입니다.');
             return;
         }
@@ -270,7 +267,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     title,
                     folder_id: activeFolderId || undefined,
                     messages: [],
-                    model_id: selectedModel.id,
+                    model: selectedModel.model,
                     system_instruction: systemInstruction ?? ''
                 });
                 effectiveSessionId = c.id;
@@ -358,7 +355,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             videoUrl,
                             options: videoOptions,
                             createdAt: Date.now(),
-                            modelId: selectedModel.id
+                            model: selectedModel.model
                         };
 
                         // Update current session with video generation

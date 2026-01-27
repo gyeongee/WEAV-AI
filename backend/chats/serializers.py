@@ -11,11 +11,12 @@ class FolderSerializer(serializers.ModelSerializer):
 
 class ChatSessionSerializer(serializers.ModelSerializer):
     folder_id = serializers.UUIDField(read_only=True, allow_null=True)
+    model = serializers.CharField()
 
     class Meta:
         model = ChatSession
         fields = [
-            'id', 'folder', 'folder_id', 'title', 'messages', 'model_id',
+            'id', 'folder', 'folder_id', 'title', 'messages', 'model',
             'system_instruction', 'recommended_prompts', 'last_modified', 'created_at',
         ]
         read_only_fields = ['id', 'last_modified', 'created_at', 'folder_id']

@@ -18,8 +18,6 @@ urlpatterns = [
         path('jobs/', include('jobs.urls')),
         path('chats/', include('chats.urls')),
         path('storage/', include('weavai.apps.storage.urls')),
-        # 결제 API (기본 비활성, 필요 시 ENABLE_BILLING=true)
-        *([path('billing/', include('payments.urls'))] if settings.ENABLE_BILLING else []),
     ])),
 
     # 향후 확장 가능

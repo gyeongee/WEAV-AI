@@ -181,7 +181,27 @@ class APIClient {
             const { message, data } = await this.parseError(response);
             throw new APIError(message, response.status, data);
         }
-        
+
+        if (response.status === 204) {
+            return {} as T;
+        }
+
+        const contentLength = response.headers.get('content-length');
+        if (contentLength === '0') {
+            return {} as T;
+        }
+
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            const text = await response.text().catch(() => '');
+            if (!text) return {} as T;
+            try {
+                return JSON.parse(text) as T;
+            } catch {
+                return {} as T;
+            }
+        }
+
         return response.json();
     }
     

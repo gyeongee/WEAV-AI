@@ -1,24 +1,18 @@
 import { AIModel, Message } from "../../types";
 import { VideoOptions } from "../../components/chat/VideoOptions";
-import { FEATURE_FLAGS } from "../../constants/featureFlags";
 import { MODELS } from "../../constants/models";
 
 // 백엔드 API 클라이언트 사용
 import { apiClient } from './apiClient';
 
-// Google GenAI 직접 호출 제거됨 - 백엔드 Gateway 사용
-
-// OpenAI 직접 호출 제거됨 - 백엔드 Gateway 사용
-
-// sanitizeHistory 제거됨 - 백엔드에서 히스토리 처리
+// 백엔드 Gateway 사용
 
 
 // --- Access Control ---
-const checkAccess = (_modelId: string, user: any) => {
+const checkAccess = (user: any) => {
   if (!user) {
     throw new Error("로그인이 필요한 기능입니다.");
   }
-  if (FEATURE_FLAGS.bypassMembership) return true;
   return true;
 };
 
@@ -27,18 +21,19 @@ export const aiService = {
   /**
    * Plan Project Structure (백엔드 Gateway)
    */
-  planProjectStructure: async (userGoal: string, user: any): Promise<{ projectName: string; steps: { title: string; modelId: string; systemInstruction: string }[] }> => {
+  planProjectStructure: async (userGoal: string, user: any): Promise<{ projectName: string; steps: { title: string; model: string; systemInstruction: string }[] }> => {
     if (!user) throw new Error("로그인이 필요한 기능입니다.");
 
-    const allowedModelIds = MODELS.map((m) => m.id).join(', ');
+    const allowedModels = MODELS.map((m) => m.model).join(', ');
+    const plannerModel = MODELS.find((m) => m.category === 'LLM' && m.name === 'Gemini 3 Flash')?.model || MODELS.find((m) => m.category === 'LLM')?.model;
     const prompt = `
       You are an expert AI Project Manager. The user wants to achieve the following goal: "${userGoal}".
       
       Please design a project structure.
       
       **CRITICAL RULES:**
-      1.  **Strict Model Selection:** You MUST ONLY use the Model IDs listed below. Do NOT invent new model IDs.
-          - Allowed model IDs: ${allowedModelIds}
+      1.  **Strict Model Selection:** You MUST ONLY use the models listed below. Do NOT invent new models.
+          - Allowed models: ${allowedModels}
           
       2.  **Language:** The 'projectName' and 'title' (step names) MUST be in **Korean (한국어)**. The 'systemInstruction' should also be in Korean.
       
@@ -50,7 +45,7 @@ export const aiService = {
         "steps": [
           {
             "title": "단계 1: [작업명] (Korean)",
-            "modelId": "[Exact Model ID from list above]",
+            "model": "[Exact model name from list above]",
             "systemInstruction": "[Persona and detailed instruction in Korean]"
           }
         ]
@@ -60,7 +55,7 @@ export const aiService = {
     // 백엔드 Gateway 호출
     const result = await apiClient.post('/api/v1/chat/complete/', {
       provider: 'fal',
-      model_id: 'gemini-3-flash',
+      model: plannerModel,
       input_text: prompt,
       system_prompt: 'You are an expert AI Project Manager. Always respond in valid JSON format only.',
       max_output_tokens: 1024
@@ -78,7 +73,7 @@ export const aiService = {
   generateVideo: async (model: AIModel, prompt: string, videoOptions: VideoOptions, user: any, signal?: AbortSignal): Promise<string | null> => {
     const jobData = {
       provider: model.provider || 'fal',
-      model_id: model.id,
+      model: model.model,
       arguments: {
         prompt,
         duration: videoOptions.duration,
@@ -115,7 +110,7 @@ export const aiService = {
 
   // --- Helper Functions ---
 
-  // Sora 2 직접 호출 제거됨 - generateVideo(Jobs API) 사용
+  // 비디오 생성은 Jobs API 사용
 
 
   /**
@@ -124,7 +119,7 @@ export const aiService = {
   generateImage: async (model: AIModel, prompt: string, user: any, signal?: AbortSignal): Promise<string | null> => {
     const jobData = {
       provider: model.provider || 'fal',
-      model_id: model.id,
+      model: model.model,
       arguments: { prompt },
       store_result: true
     };
@@ -159,7 +154,7 @@ export const aiService = {
    */
   generateTextStream: async function* (model: AIModel, prompt: string, history: Message[] = [], systemInstruction?: string, user?: any, signal?: AbortSignal) {
     try {
-      checkAccess(model.id, user);
+      checkAccess(user);
     } catch (e: any) {
       yield `\n[오류: ${e.message}]`;
       return;
@@ -180,7 +175,7 @@ export const aiService = {
       // 백엔드 Gateway 호출
       const result = await apiClient.post('/api/v1/chat/complete/', {
         provider,
-        model_id: model.id,
+        model: model.model,
         input_text: prompt,
         system_prompt: systemInstruction,
         history: historyArray,

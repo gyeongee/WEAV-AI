@@ -1,8 +1,7 @@
 # WEAV AI Jobs 앱 뷰
-# AI 작업 관리 API (OpenAI, Gemini 연동) — 비동기 + 사용자별 목록/조회
+# AI 작업 관리 API (fal.ai 통합) — 비동기 + 사용자별 목록/조회
 
 import logging
-from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -20,12 +19,12 @@ logger = logging.getLogger(__name__)
 ACTIVE_STATUSES = ('PENDING', 'IN_QUEUE', 'IN_PROGRESS')
 
 
-def _model_type_from_model_id(model_id: str) -> str:
-    m = (model_id or '').lower()
-    if 'image' in m or 'dall-e' in m or 'gpt-image' in m:
-        return 'image'
-    if 'video' in m or 'sora' in m or 'veo' in m:
+def _model_type_from_model(model: str) -> str:
+    m = (model or '').lower()
+    if any(token in m for token in ('sora', 'video')):
         return 'video'
+    if any(token in m for token in ('flux', 'banana', 'image')):
+        return 'image'
     return 'text'
 
 
@@ -42,20 +41,8 @@ def list_or_create_jobs(request):
     serializer = JobCreateSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     
-    # 이미지/비디오 생성은 프리미엄 기능 (멤버십 체크)
-    model_id = serializer.validated_data.get('model_id', '')
-    model_type = _model_type_from_model_id(model_id)
-    if settings.ENFORCE_MEMBERSHIP and model_type in ('image', 'video'):
-        if not request.user.can_use_premium_features:
-            return Response(
-                {
-                    'detail': '이미지/비디오 생성은 프리미엄 멤버십이 필요합니다.',
-                    'error_code': 'membership_required',
-                    'membership_required': True,
-                    'current_membership': request.user.membership_type,
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+    model = serializer.validated_data.get('model', '')
+    model_type = _model_type_from_model(model)
     
     active_count = Job.objects.filter(
         user=request.user,
@@ -92,7 +79,7 @@ def _detail_payload(job):
     serializer = JobDetailSerializer(job)
     data = dict(serializer.data)
     if job.status == 'COMPLETED' and job.result_json:
-        model_type = _model_type_from_model_id(job.model_id)
+        model_type = _model_type_from_model(job.model)
         data['result'] = {**job.result_json, 'type': model_type}
     return data
 

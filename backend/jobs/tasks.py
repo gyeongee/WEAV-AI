@@ -1,5 +1,5 @@
 # WEAV AI Jobs 앱 Celery 작업
-# AI 작업 처리 (FAL.ai 제외 - 추후 확장 예정)
+# AI 작업 처리 (fal.ai 통합)
 
 import logging
 from celery import shared_task
@@ -38,19 +38,19 @@ def run_ai_job(self, job_id: str) -> None:
     job.status = 'IN_PROGRESS'
     job.save(update_fields=['status', 'updated_at'])
 
-    model_id = (job.model_id or '').lower()
-    if 'image' in model_id or 'dall-e' in model_id or 'gpt-image' in model_id or 'banana' in model_id:
-        model_type = 'image'
-    elif 'video' in model_id or 'sora' in model_id or 'veo' in model_id:
+    model = (job.model or '').lower()
+    if any(token in model for token in ('sora', 'video')):
         model_type = 'video'
+    elif any(token in model for token in ('flux', 'banana', 'image')):
+        model_type = 'image'
     else:
         model_type = 'text'
 
     try:
-        # arguments에 model_id 추가 (이미지/비디오 생성 시 모델 선택용)
+        # arguments에 model 추가 (이미지/비디오 생성 시 모델 선택용)
         arguments = dict(job.arguments or {})
-        if job.model_id:
-            arguments['model_id'] = job.model_id
+        if job.model:
+            arguments['model'] = job.model
         
         ai_result = ai_router.route_and_run(
             provider=job.provider,
@@ -97,7 +97,7 @@ def run_ai_job(self, job_id: str) -> None:
 
 # ===== AI 작업 관련 Celery 작업들 - 추후 구현 예정 =====
 # 현재는 모두 주석 처리되어 있음
-# 추후 AI 서비스(OpenAI, Gemini 등) 연동 시 활성화 예정
+# 추후 확장 시 활성화 예정
 
 # @shared_task(bind=True, max_retries=3)
 # def submit_ai_job(self, job_id: str) -> str:

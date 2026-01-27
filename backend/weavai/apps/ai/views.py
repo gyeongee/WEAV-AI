@@ -14,44 +14,6 @@ from .errors import AIServiceError, AIProviderError, AIRequestError
 logger = logging.getLogger(__name__)
 router = AIServiceRouter()
 
-# 무료 모델 목록 (멤버십 체크 불필요)
-# 프론트엔드 모델 ID와 매칭: gpt-5.2-instant만 무료
-FREE_MODELS = {
-    'gpt-5.2-instant',  # 프론트엔드 모델 ID
-    'gpt-5-mini',  # API 모델 이름
-    'gpt-4o-mini',  # API 모델 이름
-}
-
-
-def _is_premium_model(model_id: str) -> bool:
-    """
-    모델이 프리미엄 모델인지 확인
-    
-    프리미엄 모델:
-    - gemini-3-flash (Gemini)
-    - gpt-image-1.5, nano-banana (Image)
-    - sora (Video)
-    
-    무료 모델:
-    - gpt-5.2-instant (GPT)
-    """
-    if not model_id:
-        return False
-    model_lower = model_id.lower()
-    
-    # 무료 모델 체크 (정확히 일치하거나 포함)
-    if any(free_model in model_lower for free_model in FREE_MODELS):
-        return False
-    
-    # 프리미엄 모델: gemini, image, video 등
-    # gemini, image, video 키워드가 있으면 프리미엄
-    premium_keywords = ['gemini', 'image', 'video', 'sora', 'veo', 'dall-e', 'banana']
-    if any(keyword in model_lower for keyword in premium_keywords):
-        return True
-    
-    # 기본값: 알 수 없는 모델은 프리미엄으로 간주 (안전)
-    return True
-
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -61,8 +23,8 @@ def complete_chat(request):
     
     Request Body:
     {
-        "provider": "fal" | "openai" | "gemini",
-        "model_id": "gpt-4o-mini" | "gemini-1.5-flash" | ...,
+        "provider": "fal",
+        "model": "openai/gpt-4o-mini" | "google/gemini-flash-1.5" | "fal-ai/*",
         "input_text": "사용자 입력",
         "system_prompt": "시스템 프롬프트 (선택)",
         "history": [{"role": "user|assistant", "content": "..."}, ...],
@@ -73,14 +35,14 @@ def complete_chat(request):
     Response:
     {
         "text": "AI 응답 텍스트",
-        "provider": "openai",
-        "model": "gpt-4o-mini",
+        "provider": "fal",
+        "model": "meta-llama/llama-4-maverick",
         "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
     }
     """
     try:
-        provider = request.data.get('provider') or getattr(settings, 'AI_PROVIDER_DEFAULT', 'openai')
-        model_id = request.data.get('model_id')
+        provider = request.data.get('provider') or getattr(settings, 'AI_PROVIDER_DEFAULT', 'fal')
+        model = request.data.get('model') or request.data.get('model_id')
         input_text = request.data.get('input_text')
         system_prompt = request.data.get('system_prompt')
         history = request.data.get('history', [])
@@ -93,30 +55,9 @@ def complete_chat(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # 프리미엄 모델 사용 시 멤버십 체크
-        if settings.ENFORCE_MEMBERSHIP and _is_premium_model(model_id):
-            if not request.user.can_use_premium_features:
-                return Response(
-                    {
-                        'error': '프리미엄 모델 사용을 위해서는 멤버십이 필요합니다.',
-                        'membership_required': True,
-                        'current_membership': request.user.membership_type,
-                    },
-                    status=status.HTTP_403_FORBIDDEN
-                )
+        # provider는 fal 고정
         
-        # 모델 ID에서 provider 추론
-        if not provider:
-            model_lower = (model_id or '').lower()
-            if 'gpt' in model_lower or 'dall-e' in model_lower or 'sora' in model_lower:
-                provider = 'openai'
-            elif 'gemini' in model_lower:
-                provider = 'gemini'
-            else:
-                provider = 'openai'  # 기본값
-        
-        # 히스토리 처리: OpenAI는 messages 배열, Gemini는 contents 배열
-        # 현재는 간단하게 시스템 프롬프트에 통합 (향후 개선 가능)
+        # 히스토리 처리: 시스템 프롬프트에 통합 (향후 개선 가능)
         if history:
             history_text = '\n'.join([
                 f"{'User' if msg.get('role') == 'user' else 'Assistant'}: {msg.get('content', '')}"
@@ -133,12 +74,21 @@ def complete_chat(request):
             'system_prompt': system_prompt,
             'temperature': temperature,
             'max_output_tokens': max_output_tokens,
-            'model_id': model_id  # 모델 ID 전달 (클라이언트에서 사용)
+            'model': model
         }
         
         result = router.generate_text(provider, arguments)
-        
-        logger.info(f"텍스트 생성 완료: provider={provider}, user={request.user.username}, tokens={result.get('usage', {}).get('total_tokens', 0)}")
+        if not isinstance(result, dict):
+            logger.error(f"텍스트 생성 실패: provider={provider}, user={request.user.username}, result={result}")
+            return Response(
+                {'error': 'AI 응답이 비어있습니다. 잠시 후 다시 시도해주세요.'},
+                status=status.HTTP_502_BAD_GATEWAY
+            )
+
+        usage = result.get('usage') or {}
+        logger.info(
+            f"텍스트 생성 완료: provider={provider}, user={request.user.username}, tokens={usage.get('total_tokens', 0)}"
+        )
         
         return Response(result, status=status.HTTP_200_OK)
         

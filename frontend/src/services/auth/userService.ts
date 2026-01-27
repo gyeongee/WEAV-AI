@@ -1,10 +1,5 @@
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { User } from 'firebase/auth';
-import { app } from './firebase';
 import { apiClient, tokenManager, API_BASE_URL } from '../api/apiClient';
-import { toast } from 'sonner';
-
-const db = getFirestore(app);
 
 export const userService = {
     /**
@@ -16,17 +11,24 @@ export const userService = {
         try {
             // Firebase ID Token 가져오기
             const idToken = await user.getIdToken();
-            
-            // 백엔드에 토큰 검증 요청 (인증 없이 호출)
-            const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-firebase-token/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id_token: idToken,
-                }),
-            });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            let response: Response;
+            try {
+                // 백엔드에 토큰 검증 요청 (인증 없이 호출)
+                response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-firebase-token/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id_token: idToken,
+                    }),
+                    signal: controller.signal,
+                });
+            } finally {
+                clearTimeout(timeoutId);
+            }
             
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -39,7 +41,7 @@ export const userService = {
             tokenManager.setAccessToken(data.access);
             tokenManager.setRefreshToken(data.refresh);
             
-            // 사용자 정보 저장 (멤버십 등)
+            // 사용자 정보 저장
             if (data.user) {
                 localStorage.setItem('weav_user_info', JSON.stringify(data.user));
             }
@@ -50,48 +52,9 @@ export const userService = {
             // Firestore 동기화는 계속 진행 (백엔드 실패해도 프론트엔드는 작동)
         }
     },
-
-    /**
-     * Syncs the Firebase Auth user to Firestore 'users' collection.
-     * Creates the document if it doesn't exist.
-     */
-    syncUserToFirestore: async (user: User) => {
-        if (!user) return;
-
-        try {
-            const userRef = doc(db, 'users', user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-                // New User
-                await setDoc(userRef, {
-                    uid: user.uid,
-                    email: user.email,
-                    displayName: user.displayName,
-                    photoURL: user.photoURL,
-                    createdAt: serverTimestamp(),
-                    lastLoginAt: serverTimestamp(),
-                    plan: 'free', // Default plan
-                });
-                console.log(`[UserService] Created new user profile for ${user.email}`);
-            } else {
-                // Existing User - Update login time
-                await updateDoc(userRef, {
-                    lastLoginAt: serverTimestamp(),
-                    photoURL: user.photoURL, // Sync latest photo
-                    displayName: user.displayName // Sync latest name
-                });
-                console.log(`[UserService] Updated user profile for ${user.email}`);
-            }
-            
-            // 백엔드 JWT 토큰 발급은 AuthContext에서 처리
-        } catch (error) {
-            console.error('[UserService] Failed to sync user:', error);
-        }
-    },
     
     /**
-     * 사용자 프로필 정보 갱신 (멤버십 상태 등)
+     * 사용자 프로필 정보 갱신
      */
     refreshUserProfile: async (): Promise<any> => {
         try {

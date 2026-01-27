@@ -15,7 +15,7 @@ const mapChat = (r: any): ChatSession => ({
   id: String(r.id),
   title: r.title,
   messages: Array.isArray(r.messages) ? r.messages : [],
-  modelId: r.model_id || 'gpt-5.2-instant',
+  model: r.model ?? r.model_id ?? 'openai/gpt-4o-mini',
   systemInstruction: r.system_instruction,
   folderId: r.folder_id != null ? String(r.folder_id) : undefined,
   lastModified: r.last_modified ? new Date(r.last_modified).getTime() : Date.now(),
@@ -49,14 +49,14 @@ export const chatApi = {
     title: string;
     folder_id?: string | null;
     messages?: unknown[];
-    model_id?: string;
+    model?: string;
     system_instruction?: string;
     recommended_prompts?: string[];
   }): Promise<ChatSession> {
     const body: Record<string, unknown> = {
       title: payload.title,
       messages: payload.messages ?? [],
-      model_id: payload.model_id ?? 'gpt-5.2-instant',
+      model: payload.model ?? 'openai/gpt-4o-mini',
       system_instruction: payload.system_instruction ?? '',
       recommended_prompts: payload.recommended_prompts ?? [],
     };
@@ -70,7 +70,7 @@ export const chatApi = {
     updates: Partial<{
       title: string;
       messages: unknown[];
-      model_id: string;
+      model: string;
       system_instruction: string;
       recommended_prompts: string[];
     }>
@@ -78,7 +78,7 @@ export const chatApi = {
     const body: Record<string, unknown> = {};
     if (updates.title != null) body.title = updates.title;
     if (updates.messages != null) body.messages = updates.messages;
-    if (updates.model_id != null) body.model_id = updates.model_id;
+    if (updates.model != null) body.model = updates.model;
     if (updates.system_instruction != null) body.system_instruction = updates.system_instruction;
     if (updates.recommended_prompts != null) body.recommended_prompts = updates.recommended_prompts;
     const r = (await apiClient.put<unknown>(`/api/v1/chats/chats/${id}/`, body)) as any;

@@ -101,14 +101,14 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
     useEffect(() => {
         const timer = setTimeout(() => setIsVisible(true), 50);
         return () => clearTimeout(timer);
-    }, [selectedModel.id]);
+    }, [selectedModel.model]);
 
     const handleClose = () => {
         setIsVisible(false);
         setTimeout(onClose, 500);
     };
 
-    const modelKey = selectedModel.id === 'sora' ? 'sora' : 'sora';
+    const modelKey = selectedModel.model === 'fal-ai/sora-2' ? 'videoPro' : 'videoPro';
     const config = MODEL_CONFIGS[modelKey];
 
     // Auto-correct invalid options (e.g. 1080p when only 720p is allowed)
@@ -142,7 +142,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
     };
 
     const handleModelSwitch = () => {
-        // Sora만 사용하므로 스위칭 불필요
+        // 단일 비디오 모델 사용
         return;
     };
 
@@ -234,11 +234,11 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
                         onClick={uiState === 'input' ? handleModelSwitch : undefined}
                         className={`group relative flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 pr-3 sm:pr-4 rounded-xl transition-all duration-300 border border-transparent flex-shrink-0
                         ${uiState === 'input' ? 'hover:border-white/10 hover:bg-white/5 cursor-pointer' : 'opacity-50 cursor-default'}
-                        ${modelKey === 'sora' ? 'text-white' : 'text-white'}`}
+                        ${modelKey === 'videoPro' ? 'text-white' : 'text-white'}`}
                     >
-                        <div className={`p-2 sm:p-2.5 rounded-lg transition-all duration-300 shadow-lg ${modelKey === 'sora' ? 'bg-black shadow-white/5' : 'bg-gradient-to-br from-blue-600 to-purple-600 shadow-blue-500/20'}`}>
-                            {modelKey === 'sora' ? (
-                                <img src="/sora-logo.png" alt="Sora 2" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                        <div className={`p-2 sm:p-2.5 rounded-lg transition-all duration-300 shadow-lg ${modelKey === 'videoPro' ? 'bg-black shadow-white/5' : 'bg-gradient-to-br from-blue-600 to-purple-600 shadow-blue-500/20'}`}>
+                            {modelKey === 'videoPro' ? (
+                                <Clapperboard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             ) : <Clapperboard size={18} className="sm:w-[22px] sm:h-[22px]" />}
                         </div>
 
@@ -246,7 +246,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
                         <div className="text-left hidden sm:block">
                             <div className="flex items-center gap-2">
                                 <h2 className="text-lg sm:text-2xl font-bold tracking-tight">
-                                    Sora 2
+                                    Video Pro
                                 </h2>
                                 <span className="text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded border border-white/20 text-neutral-400 font-medium tracking-widest uppercase">
                                     STUDIO
@@ -256,7 +256,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
                         {/* 모바일에서 모델 이름 표시 */}
                         <div className="text-left sm:hidden">
                             <h2 className="text-sm font-bold tracking-tight">
-                                Sora 2
+                                Video Pro
                             </h2>
                         </div>
                     </button>
@@ -410,7 +410,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
                                         <span className="text-xs font-bold text-emerald-400">~{parseInt(videoOptions.duration || '0') * 5 + (videoOptions.resolution === '4K' ? 50 : 25)} TOKENS</span>
                                     </div>
                                     <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" style={{ width: `${(parseInt(videoOptions.duration || '0') / (modelKey === 'sora' ? 20 : 8)) * 100}%` }} />
+                                        <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" style={{ width: `${(parseInt(videoOptions.duration || '0') / (modelKey === 'videoPro' ? 20 : 8)) * 100}%` }} />
                                     </div>
                                 </div>
 
@@ -630,7 +630,7 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
                                     <span className="text-xs font-bold text-emerald-400">~{parseInt(videoOptions.duration || '0') * 5 + (videoOptions.resolution === '4K' ? 50 : 25)} TOKENS</span>
                                 </div>
                                 <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" style={{ width: `${(parseInt(videoOptions.duration || '0') / (modelKey === 'sora' ? 20 : 8)) * 100}%` }} />
+                                    <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500" style={{ width: `${(parseInt(videoOptions.duration || '0') / (modelKey === 'videoPro' ? 20 : 8)) * 100}%` }} />
                                 </div>
                             </div>
                         </div>

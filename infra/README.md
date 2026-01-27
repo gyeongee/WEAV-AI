@@ -27,8 +27,7 @@ ALLOWED_HOSTS=weavai.hub,localhost
 POSTGRES_PASSWORD=your-password
 REDIS_URL=redis://redis:6379/0
 
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
+FAL_KEY=your-fal-ai-api-key
 
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 
@@ -113,4 +112,4 @@ docker compose restart api
 
 ---
 
-**마지막 업데이트**: 2026-01-24
+**마지막 업데이트**: 2026-01-27

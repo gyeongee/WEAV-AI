@@ -11,9 +11,9 @@ AI 기반 콘텐츠 생성 플랫폼. 사용자가 목표를 입력하면 AI가 
 ### 핵심 기능
 
 -  **AI 기반 프로젝트 계획**: 사용자 목표 분석 → 단계별 작업 계획 생성
--  **멀티 모델 채팅**: OpenAI GPT, Google Gemini 등 다양한 모델 지원
--  **이미지 생성**: DALL-E 3 기반 (비동기 Jobs API)
--  **비디오 생성**: SORA, VEO (비동기 Jobs API)
+-  **멀티 모델 채팅**: fal.ai (any-llm) 기반 통합 호출
+-  **이미지 생성**: fal.ai 모델 카탈로그 (비동기 Jobs API)
+-  **비디오 생성**: fal.ai 모델 카탈로그 (비동기 Jobs API)
 -  **폴더·채팅 DB 저장**: 로그인 후 작업 내용 DB 유지, 로그아웃·재로그인 시 복원
 -  **다크/라이트 모드**: 사용자 맞춤형 테마 지원
 -  **Google 로그인**: Firebase 인증 + 백엔드 JWT + **사용자·멤버십 DB 저장**
@@ -61,8 +61,7 @@ Nginx (리버스 프록시, 포트 8080)
 - Firebase Admin SDK (토큰 검증)
 
 ### AI 서비스
-- **OpenAI**: GPT-4o-mini (텍스트), DALL-E 3 (이미지), Sora 2 (비디오)
-- **Google Gemini**: Gemini 1.5 Flash/Pro (텍스트), Gemini 2.5 Flash Image (이미지, Nano Banana)
+- **fal.ai 통합 게이트웨이**: any-llm(텍스트), 이미지/비디오 모델 카탈로그
 
 ---
 
@@ -97,8 +96,7 @@ POSTGRES_PASSWORD=your-password
 REDIS_URL=redis://redis:6379/0
 
 # AI API 키
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
+FAL_KEY=your-fal-ai-api-key
 
 # Firebase Admin SDK
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
@@ -185,9 +183,9 @@ npm run dev
 - **데이터 저장**: 채팅·폴더 DB 저장 (PostgreSQL), 로그아웃 후 재로그인 시 복원
 - **AI 작업**: Jobs API (비동기 Celery), 사용자당 최대 4건 동시 처리, 폴링 지원
 - **AI 모델**:
-  - **텍스트**: OpenAI GPT-4o-mini, Google Gemini 1.5 Flash/Pro
-  - **이미지**: OpenAI DALL-E 3, Google Gemini 2.5 Flash Image (Nano Banana) 
-  - **비디오**: OpenAI Sora 2 (API 공개 시 자동 동작)
+  - **텍스트**: fal-ai/any-llm (OpenRouter 모델 선택)
+  - **이미지**: fal.ai 모델 카탈로그 (예: Flux 2, Nano Banana Pro)
+  - **비디오**: fal.ai 모델 카탈로그 (예: Video Pro)
 - **결제**: PortOne 일회 30일권, `/pricing` 페이지, prepare/complete/webhook, Celery 자동복구
 - **인프라**: Docker Compose (infra), PostgreSQL, Redis, MinIO, Nginx (resolver + 변수), Celery Worker
 - **보안**: AI Gateway (백엔드 라우팅), API 키 서버 전용, 멤버십 기반 프리미엄 기능 제한

@@ -22,13 +22,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const {
         messages, inputValue, setInputValue, selectedModel, setSelectedModel,
         isLoading, sendMessage, stopGeneration, loadChatSession, currentSessionId, hasStarted,
-        videoOptions, setVideoOptions
+        videoOptions, setVideoOptions, recentChats
     } = useChatContext();
 
     const [showPrompts, setShowPrompts] = useState(true);
 
     // Get current session for recommended prompts
-    const { folderChats, recentChats } = useFolder();
+    const { folderChats } = useFolder();
     const currentSession = useMemo(() => {
         if (!currentSessionId) return null;
         if (id) {

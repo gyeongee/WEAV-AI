@@ -53,7 +53,7 @@ export const useChat = ({ onChatStart }: UseChatProps = {}) => {
     setCurrentSessionId(session.id);
     
     // Find model by ID, default to first if not found
-    const model = MODELS.find(m => m.id === session.modelId) || MODELS[0];
+    const model = MODELS.find(m => m.model === session.model) || MODELS[0];
     setSelectedModel(model);
     setInputValue('');
   };

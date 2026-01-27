@@ -6,28 +6,28 @@ import { useAuth } from './AuthContext';
 import { toast } from 'sonner';
 
 // Helper functions for AI folder generation
-type StepLike = { title: string; modelId: string; systemInstruction: string };
+type StepLike = { title: string; model: string; systemInstruction: string };
 const generateWelcomeMessage = (step: StepLike, projectName: string): string => {
     const modelNames: Record<string, string> = {
-        'gpt-5.2-instant': 'ChatGPT 5.2 Instant',
-        'gemini-3-flash': 'Gemini 3 Flash',
-        'gpt-image-1.5': 'GPT Image 1.5',
-        'nano-banana': 'Nano Banana',
-        'sora': 'SORA'
+        'openai/gpt-4o-mini': 'GPT 5.2 Instant',
+        'google/gemini-flash-1.5': 'Gemini 3 Flash',
+        'fal-ai/flux-2': 'GPT Image',
+        'fal-ai/nano-banana-pro': 'Nano Banana',
+        'fal-ai/sora-2': 'Sora 2'
     };
 
     const modelDescriptions: Record<string, string> = {
-        'gpt-5.2-instant': '빠르고 효율적인 텍스트 생성에 특화된 모델로, 전략 수립과 계획 수립에 최적화되어 있습니다.',
-        'gemini-3-flash': '데이터 분석과 종합적인 판단력이 뛰어난 모델로, 종목 선정과 세부 계획 수립에 강점이 있습니다.',
-        'gpt-image-1.5': '고품질 이미지 생성에 특화된 DALL-E 모델입니다.',
-        'nano-banana': '빠른 이미지 생성과 일러스트레이션에 특화된 모델입니다.',
-        'sora': '혁신적인 동영상 생성 AI로, 창의적인 비디오 콘텐츠 제작에 최적화되어 있습니다.'
+        'openai/gpt-4o-mini': '빠르고 안정적인 범용 텍스트 생성 모델입니다.',
+        'google/gemini-flash-1.5': '정밀한 추론과 고품질 문장 생성에 적합한 모델입니다.',
+        'fal-ai/flux-2': '텍스트 기반 고품질 이미지 생성에 특화된 모델입니다.',
+        'fal-ai/nano-banana-pro': '빠른 이미지 생성과 일러스트 스타일에 적합한 모델입니다.',
+        'fal-ai/sora-2': '텍스트 기반 고품질 비디오 생성에 최적화된 모델입니다.'
     };
 
     const baseMessage = ` **${projectName}** 프로젝트의 **${step.title}** 단계에 오신 것을 환영합니다!
 
- **사용 모델:** ${modelNames[step.modelId] ?? step.modelId}
- **모델 특징:** ${modelDescriptions[step.modelId] ?? '범용 AI 모델입니다.'}
+ **사용 모델:** ${modelNames[step.model] ?? step.model}
+ **모델 특징:** ${modelDescriptions[step.model] ?? '범용 AI 모델입니다.'}
 
  **작업 개요:**
 ${step.systemInstruction}
@@ -45,7 +45,7 @@ const generateRecommendedPrompts = (step: any, projectName: string): string[] =>
 
     // 각 모델별 특성에 맞는 프롬프트 템플릿
     const promptTemplates: Record<string, (context: { title: string, project: string }) => string[]> = {
-        'gpt-5.2-instant': ({ title, project }) => {
+        'openai/gpt-4o-mini': ({ title, project }) => {
             if (title.includes('투자') || title.includes('전략') || title.includes('계획')) {
                 return [
                     `"${project}" 프로젝트의 구체적인 실행 전략을 단계별로 수립해주세요`,
@@ -67,7 +67,7 @@ const generateRecommendedPrompts = (step: any, projectName: string): string[] =>
             ];
         },
 
-        'gemini-3-flash': ({ title, project }) => {
+        'google/gemini-flash-1.5': ({ title, project }) => {
             if (title.includes('종목') || title.includes('선정') || title.includes('선택')) {
                 return [
                     `"${project}" 목표에 맞는 최적의 옵션들을 추천해주세요`,
@@ -89,26 +89,26 @@ const generateRecommendedPrompts = (step: any, projectName: string): string[] =>
             ];
         },
 
-        'gpt-image-1.5': ({ title, project }) => [
+        'fal-ai/flux-2': ({ title, project }) => [
             `"${project}" 프로젝트의 ${title} 작업을 시각적으로 표현해주세요`,
             `${title} 작업의 결과를 그래픽으로 만들어주세요`,
             `${project} 관련 시각 자료를 고화질로 생성해주세요`
         ],
 
-        'nano-banana': ({ title, project }) => [
+        'fal-ai/nano-banana-pro': ({ title, project }) => [
             `${project} 프로젝트의 ${title} 작업을 위한 간단한 시각 자료를 만들어주세요`,
             `${title} 작업에 필요한 아이콘이나 심볼을 디자인해주세요`,
             `${project} 관련 아이디어를 시각적으로 표현해주세요`
         ],
 
-        'sora': ({ title, project }) => [
+        'fal-ai/sora-2': ({ title, project }) => [
             `"${project}" 프로젝트의 ${title} 작업을 동영상으로 만들어주세요`,
             `${title} 작업의 과정을 영상으로 시각화해주세요`,
             `${project} 관련 스토리를 동영상 콘텐츠로 제작해주세요`
         ]
     };
 
-    const generatePrompts = promptTemplates[step.modelId];
+    const generatePrompts = promptTemplates[step.model];
     if (generatePrompts) {
         return generatePrompts({ title, project });
     }
@@ -136,7 +136,7 @@ interface FolderContextType {
 const FolderContext = createContext<FolderContextType | null>(null);
 
 export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { user, loading: authLoading } = useAuth();
+    const { user, loading: authLoading, jwtReady } = useAuth();
     const [folders, setFolders] = useState<Folder[]>([]);
     const [folderChats, setFolderChats] = useState<Record<string, ChatSession[]>>({});
     const [isGeneratingFolder, setIsGeneratingFolder] = useState(false);
@@ -144,7 +144,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // DB에서 폴더/폴더별 채팅 로드 (로그인 시)
     useEffect(() => {
-        if (authLoading) return;
+        if (authLoading || !jwtReady) return;
         if (!user) {
             setFolders([]);
             setFolderChats({});
@@ -171,10 +171,13 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             }
         })();
         return () => { ok = false; };
-    }, [authLoading, user?.uid]);
+    }, [authLoading, jwtReady, user?.uid]);
 
     const createFolder = async (name: string, type: 'custom') => {
-        if (!user) return;
+        if (!user || !jwtReady) {
+            toast.error('로그인이 필요한 기능입니다.');
+            return;
+        }
         try {
             const f = await chatApi.createFolder(name, type);
             setFolders(prev => [f, ...prev]);
@@ -186,7 +189,10 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     const createAIFolder = async (goal: string) => {
-        if (!user) return;
+        if (!user || !jwtReady) {
+            toast.error('로그인이 필요한 기능입니다.');
+            return;
+        }
         setIsGeneratingFolder(true);
         try {
             const plan = await aiService.planProjectStructure(goal, user);
@@ -214,7 +220,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                     title: step.title,
                     folder_id: f.id,
                     messages: [welcomeMsg],
-                    model_id: step.modelId,
+                    model: step.model,
                     system_instruction: si,
                     recommended_prompts: generateRecommendedPrompts(step, plan.projectName)
                 });
@@ -274,7 +280,7 @@ export const FolderProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
         const payload: Parameters<typeof chatApi.updateChat>[1] = {};
         if (updates.messages != null) payload.messages = updates.messages as any;
-        if (updates.modelId != null) payload.model_id = updates.modelId;
+        if (updates.model != null) payload.model = updates.model;
         if (updates.systemInstruction != null) payload.system_instruction = updates.systemInstruction;
         const key = chatId;
         if (persistTimeoutRef.current[key]) clearTimeout(persistTimeoutRef.current[key]);

@@ -9,18 +9,13 @@ interface UserInfo {
   email?: string;
   display_name?: string;
   photo_url?: string;
-  membership_type?: 'free' | 'standard' | 'premium';
-  membership_expires_at?: string | null;
-  is_membership_active?: boolean;
-  can_use_premium_features?: boolean;
-  has_openai_key?: boolean;
-  has_gemini_key?: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   userInfo: UserInfo | null;
   loading: boolean;
+  jwtReady: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshUserInfo: () => Promise<void>;
@@ -32,6 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [jwtReady, setJwtReady] = useState(false);
 
   useEffect(() => {
     // Firebase 인증 상태 확인 (개발/프로덕션 모두)
@@ -43,12 +39,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      setJwtReady(false);
       if (currentUser) {
         try {
-          // Firestore 동기화
-          await userService.syncUserToFirestore(currentUser);
           // 백엔드 JWT 토큰 발급 (멤버십 정보 포함)
           await userService.verifyFirebaseToken(currentUser);
+          setJwtReady(true);
+          // Firestore 동기화 제거 (Postgres에서 사용자 프로필 관리)
           // 저장된 사용자 정보 로드
           const saved = localStorage.getItem('weav_user_info');
           if (saved) {
@@ -60,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch (error) {
           console.error("Failed to sync user or verify token:", error);
+          setJwtReady(false);
           toast.error('인증 처리에 실패했습니다.', { description: '백엔드 연결 상태를 확인해주세요.' });
         }
       } else {
@@ -67,6 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userService.clearAuth();
         localStorage.removeItem('weav_user_info');
         setUserInfo(null);
+        setJwtReady(false);
       }
       setLoading(false);
     });
@@ -83,9 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const firebaseUser = await loginWithGoogle();
       if (firebaseUser) {
-        // Firestore 동기화 및 백엔드 JWT 토큰 발급
-        await userService.syncUserToFirestore(firebaseUser);
+        // 백엔드 JWT 토큰 발급 먼저 처리
         await userService.verifyFirebaseToken(firebaseUser);
+        setJwtReady(true);
+        // Firestore 동기화 제거 (Postgres에서 사용자 프로필 관리)
       }
     } catch (error) {
       console.error("Login failed", error);
@@ -110,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setUserInfo(null);
       localStorage.removeItem('weav_user_info');
+      setJwtReady(false);
       
       // 로그아웃 후 채팅 상태 초기화는 ChatContext에서 처리
       // 여기서는 사용자 상태만 관리
@@ -135,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, userInfo, loading, signIn, signOut, refreshUserInfo }}>
+    <AuthContext.Provider value={{ user, userInfo, loading, jwtReady, signIn, signOut, refreshUserInfo }}>
       {children}
     </AuthContext.Provider>
   );

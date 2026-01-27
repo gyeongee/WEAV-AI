@@ -19,28 +19,8 @@ class FalClient:
         self.api_key = api_key
         self.base_url = os.getenv('FAL_BASE_URL', 'https://fal.run').rstrip('/')
         self.text_endpoint = os.getenv('FAL_TEXT_ENDPOINT', 'fal-ai/any-llm').lstrip('/')
-        self.default_text_model = os.getenv('FAL_TEXT_DEFAULT_MODEL', 'google/gemini-2.5-flash-lite')
+        self.default_text_model = os.getenv('FAL_TEXT_DEFAULT_MODEL', 'openai/gpt-4o-mini')
 
-        self.text_model_map = {
-            'gpt-5.2-instant': 'openai/gpt-5-mini',
-            'gpt-5-mini': 'openai/gpt-5-mini',
-            'gpt-5-nano': 'openai/gpt-5-nano',
-            'gpt-5-chat': 'openai/gpt-5-chat',
-            'gpt-4o-mini': 'openai/gpt-4o-mini',
-            'gpt-4o': 'openai/gpt-4o',
-            'gemini-3-flash': 'google/gemini-2.5-flash-lite',
-            'gemini-2.5-flash': 'google/gemini-2.5-flash',
-            'gemini-2.5-pro': 'google/gemini-2.5-pro',
-        }
-
-        self.image_model_map = {
-            'gpt-image-1.5': os.getenv('FAL_IMAGE_MODEL_GPT_IMAGE_15', 'fal-ai/flux-2'),
-            'nano-banana': os.getenv('FAL_IMAGE_MODEL_NANO_BANANA', 'fal-ai/nano-banana-pro'),
-        }
-
-        self.video_model_map = {
-            'sora': os.getenv('FAL_VIDEO_MODEL_SORA', 'fal-ai/sora-2'),
-        }
 
     def _headers(self) -> Dict[str, str]:
         return {
@@ -60,9 +40,12 @@ class FalClient:
             raise AIRequestError('fal', f'FAL 요청 실패: {response.text}', response.status_code)
 
         try:
-            return response.json()
+            data = response.json()
         except Exception:
             raise AIRequestError('fal', 'FAL 응답을 JSON으로 파싱할 수 없습니다', 500)
+        if data is None:
+            raise AIRequestError('fal', 'FAL 응답이 비어있습니다', 502)
+        return data
 
     def _extract_image_url(self, data: Dict[str, Any]) -> str:
         if isinstance(data, dict):
@@ -97,8 +80,7 @@ class FalClient:
         raise AIRequestError('fal', '비디오 URL을 찾을 수 없습니다', 500)
 
     def generate_text(self, request: TextGenerationRequest) -> Dict[str, Any]:
-        model_id = (request.model_id or '').lower()
-        fal_model = self.text_model_map.get(model_id, self.default_text_model)
+        fal_model = request.model or self.default_text_model
 
         payload = {
             "prompt": request.input_text,
@@ -124,10 +106,10 @@ class FalClient:
         }
 
     def generate_image(self, request: ImageGenerationRequest) -> Dict[str, Any]:
-        model_id = (request.model_id or '').lower()
-        endpoint = self.image_model_map.get(model_id)
+        model = request.model
+        endpoint = model or None
         if not endpoint:
-            raise AIRequestError('fal', f'지원하지 않는 이미지 모델: {request.model_id}', 400)
+            raise AIRequestError('fal', '지원하지 않는 이미지 모델', 400)
 
         payload = {
             "prompt": request.prompt,
@@ -142,10 +124,10 @@ class FalClient:
         }
 
     def generate_video(self, request: VideoGenerationRequest) -> Dict[str, Any]:
-        model_id = (request.model_id or '').lower()
-        endpoint = self.video_model_map.get(model_id)
+        model = request.model
+        endpoint = model or None
         if not endpoint:
-            raise AIRequestError('fal', f'지원하지 않는 비디오 모델: {request.model_id}', 400)
+            raise AIRequestError('fal', '지원하지 않는 비디오 모델', 400)
 
         payload = {
             "prompt": request.prompt,

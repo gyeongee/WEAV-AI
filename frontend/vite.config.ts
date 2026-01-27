@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true
         }
       }
-      // OpenAI 프록시 제거됨 - 백엔드 Gateway 사용
+      // 외부 AI 프록시 제거됨 - 백엔드 Gateway 사용
     },
     plugins: [react()],
     // API 키 번들 주입 제거됨 - 백엔드 Gateway 사용
@@ -44,9 +44,7 @@ export default defineConfig(({ mode }) => {
 
             // Firebase
             'firebase-vendor': ['firebase/app', 'firebase/auth'],
-
-            // AI services
-            'ai-vendor': ['@google/genai']
+            
           }
         }
       },

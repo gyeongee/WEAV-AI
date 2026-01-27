@@ -1,7 +1,7 @@
 import { LucideIcon } from 'lucide-react';
 
 // Base types
-export type ModelCategory = 'GPT' | 'Gemini' | 'Image' | 'Video';
+export type ModelCategory = 'LLM' | 'Image' | 'Video';
 export type MessageRole = 'user' | 'model';
 export type MessageType = 'text' | 'image' | 'video';
 export type FolderType = 'custom' | 'shorts-workflow';
@@ -9,11 +9,10 @@ export type PersonaType = 'hunter' | 'architect' | 'executive' | 'creator' | 'pa
 
 // Strict model interface
 export interface AIModel {
-  readonly id: string;
+  readonly model: string;
   readonly name: string;
   readonly category: ModelCategory;
-  readonly apiModelName: string;
-  readonly provider?: 'fal' | 'openai' | 'gemini';
+  readonly provider?: 'fal';
   readonly isVideo?: boolean;
   readonly isImage?: boolean;
 }
@@ -52,14 +51,14 @@ export interface VideoGeneration {
   readonly videoUrl: string;
   readonly options: VideoOptions;
   readonly createdAt: number;
-  readonly modelId: string;
+  readonly model: string;
 }
 
 export interface ChatSession {
   readonly id: string;
   readonly title: string;
   readonly messages: readonly Message[];
-  readonly modelId: string;
+  readonly model: string;
   readonly systemInstruction?: string;
   readonly folderId?: string;
   readonly lastModified: number;

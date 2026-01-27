@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     # Local apps
     'users',  # 사용자 인증
     'ai_services',
-    'payments',
     'jobs',  # AI 작업 관리 (모델 포함)
     'chats',  # 폴더/채팅 세션 (DB 저장)
 ]
@@ -208,35 +207,10 @@ AWS_LOCATION = 'media'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # AI Service API Keys
-OPENAI_API_KEY = config('OPENAI_API_KEY', default='')
-GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+FAL_KEY = config('FAL_KEY', default='')
 
-# Billing / Membership (개발 기본: 비활성)
-ENFORCE_MEMBERSHIP = config('ENFORCE_MEMBERSHIP', default=False, cast=bool)
-ENABLE_BILLING = config('ENABLE_BILLING', default=False, cast=bool)
-ALLOW_BILLING_IN_DEBUG = config('ALLOW_BILLING_IN_DEBUG', default=False, cast=bool)
-
-if DEBUG and not ALLOW_BILLING_IN_DEBUG:
-    ENABLE_BILLING = False
-    ENFORCE_MEMBERSHIP = False
-
-# Billing: PortOne (기본) / Stripe (선택)
-USE_PORTONE = config('USE_PORTONE', default=False, cast=bool)
-USE_STRIPE = config('USE_STRIPE', default=False, cast=bool)
-
-# PortOne (비밀키는 백엔드 전용)
-PORTONE_API_SECRET = config('PORTONE_API_SECRET', default='')
-PORTONE_WEBHOOK_SECRET = config('PORTONE_WEBHOOK_SECRET', default='')
-
-# Stripe (USE_STRIPE=True 시에만 사용)
-STRIPE_PUBLIC_KEY = config('STRIPE_PUBLIC_KEY', default='')
-STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY', default='')
-STRIPE_WEBHOOK_SECRET = config('STRIPE_WEBHOOK_SECRET', default='')
-STRIPE_PRICE_STANDARD = config('STRIPE_PRICE_STANDARD', default='')
-STRIPE_PRICE_PREMIUM = config('STRIPE_PRICE_PREMIUM', default='')
-
-# Frontend URL (결제 후 리다이렉트용)
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+ENFORCE_MEMBERSHIP = False
+ENABLE_BILLING = False
 
 # 디버그: 상세한 로깅 설정 (디버그 중에만 활성화)
 LOGGING = {

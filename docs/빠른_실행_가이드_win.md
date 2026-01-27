@@ -42,8 +42,7 @@ copy infra\.env.example infra\.env
 필수 값
 - `SECRET_KEY`
 - `POSTGRES_PASSWORD`
-- `OPENAI_API_KEY`
-- `GEMINI_API_KEY`
+- `FAL_KEY`
 - `FIREBASE_SERVICE_ACCOUNT_KEY_PATH`
 
 Firebase 키 파일 경로 예시

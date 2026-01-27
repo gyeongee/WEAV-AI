@@ -3,8 +3,6 @@
 
 import os
 from typing import Dict, Any, Union
-from .openai_client import OpenAIClient
-from .gemini_client import GeminiClient
 from .fal_client import FalClient
 from .schemas import TextGenerationRequest, ImageGenerationRequest, VideoGenerationRequest
 from .errors import AIServiceError, AIProviderError
@@ -15,16 +13,12 @@ class AIServiceRouter:
 
     def __init__(self):
         self.clients = {}
-        self.default_provider = os.getenv('AI_PROVIDER_DEFAULT', 'openai')
+        self.default_provider = os.getenv('AI_PROVIDER_DEFAULT', 'fal')
 
     def _get_client(self, provider: str):
         """클라이언트 인스턴스 가져오기 (Lazy Loading)"""
         if provider not in self.clients:
-            if provider == 'openai':
-                self.clients[provider] = OpenAIClient()
-            elif provider == 'gemini':
-                self.clients[provider] = GeminiClient()
-            elif provider == 'fal':
+            if provider == 'fal':
                 self.clients[provider] = FalClient()
             else:
                 raise AIProviderError(provider, f"지원하지 않는 AI 제공자: {provider}")
@@ -36,7 +30,7 @@ class AIServiceRouter:
         텍스트 생성 라우팅
 
         Args:
-            provider: AI 제공자 ('openai', 'gemini')
+            provider: AI 제공자 ('fal')
             arguments: 요청 파라미터
 
         Returns:
@@ -64,7 +58,7 @@ class AIServiceRouter:
         이미지 생성 라우팅
 
         Args:
-            provider: AI 제공자 ('openai', 'gemini')
+            provider: AI 제공자 ('fal')
             arguments: 요청 파라미터
 
         Returns:
@@ -90,7 +84,7 @@ class AIServiceRouter:
         비디오 생성 라우팅
 
         Args:
-            provider: AI 제공자 ('openai', 'gemini')
+            provider: AI 제공자 ('fal')
             arguments: 요청 파라미터
 
         Returns:

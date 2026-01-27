@@ -25,9 +25,7 @@ class Job(models.Model):
 
     # 제공자 정의 (확장 가능)
     PROVIDER_CHOICES = [
-        ('fal', 'FAL.ai'),  # 추후 확장 예정
-        ('openai', 'OpenAI'),
-        ('gemini', 'Google Gemini'),
+        ('fal', 'FAL.ai'),
         # 향후 확장: ('replicate', 'Replicate')
     ]
 
@@ -55,11 +53,11 @@ class Job(models.Model):
     provider = models.CharField(
         max_length=20,
         choices=PROVIDER_CHOICES,
-        default='openai'  # FAL.ai 제외로 OpenAI로 변경
+        default='fal'
     )
-    model_id = models.CharField(
+    model = models.CharField(
         max_length=100,
-        help_text='AI 모델 ID (예: fal-ai/fast-sdxl)'
+        help_text='AI 모델명 (예: fal-ai/flux-2)'
     )
 
     # 작업 파라미터 (JSON)

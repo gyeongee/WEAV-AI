@@ -79,8 +79,7 @@ POSTGRES_PORT=5432
 
 REDIS_URL=redis://redis:6379/0
 
-OPENAI_API_KEY=sk-...
-GEMINI_API_KEY=AIza...
+FAL_KEY=your-fal-ai-api-key
 
 FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 # 또는 FIREBASE_SERVICE_ACCOUNT_KEY_JSON='{"type":"service_account",...}'
@@ -93,7 +92,7 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 ### User (커스텀 `users.User`)
 - Firebase UID → `username`
 - **멤버십**: `membership_type` (free/standard/premium), `membership_expires_at`
-- **API 키 상태**: `has_openai_key`, `has_gemini_key`
+- **API 키 상태**: 서버에서 fal.ai 키로만 처리
 - `photo_url`, `last_login_at`
 
 ### Folder / ChatSession (chats)
@@ -120,11 +119,11 @@ FIREBASE_SERVICE_ACCOUNT_KEY_PATH=/path/to/firebase-key.json
 - Firebase 토큰 검증, JWT, **User·멤버십 DB 저장**
 - **chats** API (폴더·채팅 CRUD)
 - **Jobs** API (목록/생성/상세), **Celery 비동기**, 사용자당 최대 4건
-- OpenAI 텍스트·이미지, SORA 비디오 (Jobs 경유)
+- fal.ai 통합 텍스트/이미지/비디오 호출 (Jobs 경유)
 - PostgreSQL, Redis, MinIO 연동
 
 ###  진행 중
-- Gemini API 연동 (코드 완료, 테스트)
+- fal.ai 모델별 파라미터 매핑 보강
 
 ---
 

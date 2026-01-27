@@ -3,10 +3,7 @@ import { ArrowUp, AlertCircle, X, Sparkles, ChevronRight, Square } from 'lucide-
 import { ModelSelector } from './ModelSelector';
 import { VideoOptions, VideoOptions as VideoOptionsType } from './VideoOptions';
 import { VideoCreationStudio } from './VideoCreationStudio';
-import { MembershipModal } from '@/components/membership/MembershipModal';
-import { useAuth } from '@/contexts/AuthContext';
 import { MODELS } from '@/constants/models';
-import { FEATURE_FLAGS } from '@/constants/featureFlags';
 import { AIModel, PromptTemplate } from '@/types';
 
 interface ChatInputProps {
@@ -44,37 +41,12 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     showRecommendedPrompts = false,
     onCloseRecommendedPrompts
 }) => {
-    const { user, userInfo } = useAuth();
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const [showWarning, setShowWarning] = useState(false);
     const [showPrompts, setShowPrompts] = useState(false);
-    const [showMembershipModal, setShowMembershipModal] = useState(false);
-    const [requiredFeature, setRequiredFeature] = useState<string>();
     const promptMenuRef = useRef<HTMLDivElement>(null);
 
-    // 모델 사용 가능 여부 확인
-    const canUseModel = (model: AIModel): boolean => {
-        if (!user) {
-            // 비로그인: gpt-5.2-instant만 가능
-            return model.id === 'gpt-5.2-instant';
-        }
-        if (!FEATURE_FLAGS.enforceMembership) return true;
-        if (FEATURE_FLAGS.bypassMembership) return true;
-        if (!userInfo) return false;
-        // 로그인: 멤버십 확인
-        if (model.id === 'gpt-5.2-instant') return true; // 무료 모델
-        return userInfo.can_use_premium_features ?? false;
-    };
-
     const handleSend = () => {
-        if (!canUseModel(selectedModel)) {
-            const modelName = selectedModel.name;
-            setRequiredFeature(`${modelName} 사용`);
-            if (!FEATURE_FLAGS.hideBillingUI) {
-                setShowMembershipModal(true);
-            }
-            return;
-        }
         onSend();
     };
 
@@ -122,14 +94,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     };
 
     const handleModelSelect = (model: AIModel) => {
-        if (!canUseModel(model)) {
-            setRequiredFeature(`${model.name} 사용`);
-            if (!FEATURE_FLAGS.hideBillingUI) {
-                setShowMembershipModal(true);
-            }
-            return;
-        }
-        if (hasStarted && model.id !== selectedModel.id) {
+        if (hasStarted && model.model !== selectedModel.model) {
             setShowWarning(true);
         }
         onModelSelect(model);
@@ -165,7 +130,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                         videoOptions={currentVideoOptions}
                         onVideoOptionsChange={onVideoOptionsChange || (() => { })}
                         onClose={() => {
-                            const freeModel = MODELS.find(m => m.id === 'gpt-5.2-instant') || selectedModel;
+                            const freeModel = MODELS[0] || selectedModel;
                             handleModelSelect(freeModel);
                         }}
                     />
@@ -394,13 +359,6 @@ ${hasStarted ? 'h-32 opacity-100' : 'h-0 opacity-0'}`}
                 </div>
             </div>
 
-            {!FEATURE_FLAGS.hideBillingUI && (
-                <MembershipModal
-                    isOpen={showMembershipModal}
-                    onClose={() => setShowMembershipModal(false)}
-                    requiredFeature={requiredFeature}
-                />
-            )}
         </div>
     );
 };

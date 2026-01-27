@@ -27,7 +27,7 @@ export const VideoOptions: React.FC<VideoOptionsProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const modelKey = model.id === 'sora' ? 'sora' : 'sora';
+  const modelKey = model.model === 'fal-ai/sora-2' ? 'videoPro' : 'videoPro';
   const config = MODEL_CONFIGS[modelKey];
 
   const updateOption = <K extends keyof VideoOptions>(key: K, value: VideoOptions[K]) => {
@@ -63,7 +63,7 @@ export const VideoOptions: React.FC<VideoOptionsProps> = ({
     if (hasChanges) {
       onOptionsChange(newOptions);
     }
-  }, [model.id]); // Run when model changes
+  }, [model.model]); // Run when model changes
 
   // Close when clicking outside
   useEffect(() => {

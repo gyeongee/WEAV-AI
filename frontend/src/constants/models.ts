@@ -1,16 +1,14 @@
 import { AIModel } from '../types';
 
 export const MODELS: AIModel[] = [
-  // GPT Series
-  { id: 'gpt-5.2-instant', name: 'ChatGPT-5.2 Instant', category: 'GPT', apiModelName: 'openai/gpt-5-mini', provider: 'fal' },
-
-  // Gemini Series
-  { id: 'gemini-3-flash', name: 'Gemini 3 Flash Preview', category: 'Gemini', apiModelName: 'google/gemini-2.5-flash-lite', provider: 'fal' },
+  // LLM Series (fal.ai any-llm)
+  { model: 'openai/gpt-4o-mini', name: 'GPT 5.2 Instant', category: 'LLM', provider: 'fal' },
+  { model: 'google/gemini-flash-1.5', name: 'Gemini 3 Flash', category: 'LLM', provider: 'fal' },
 
   // Image Series
-  { id: 'gpt-image-1.5', name: 'GPT Image 1.5', category: 'Image', apiModelName: 'fal-ai/flux-2', provider: 'fal', isImage: true },
-  { id: 'nano-banana', name: 'Nano Banana (Gemini)', category: 'Image', apiModelName: 'fal-ai/nano-banana-pro', provider: 'fal', isImage: true },
+  { model: 'fal-ai/flux-2', name: 'GPT Image', category: 'Image', provider: 'fal', isImage: true },
+  { model: 'fal-ai/nano-banana-pro', name: 'Nano Banana', category: 'Image', provider: 'fal', isImage: true },
 
   // Video Series
-  { id: 'sora', name: 'Sora 2 (Beta)', category: 'Video', apiModelName: 'fal-ai/sora-2', provider: 'fal', isVideo: true },
+  { model: 'fal-ai/sora-2', name: 'Sora 2', category: 'Video', provider: 'fal', isVideo: true },
 ];
