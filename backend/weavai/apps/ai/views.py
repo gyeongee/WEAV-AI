@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .router import AIServiceRouter
-#from .system_rules import prepend_model_rule
+from .system_rules import prepend_model_rule
 from .schemas import TextGenerationRequest
 from .errors import AIServiceError, AIProviderError, AIRequestError
 
