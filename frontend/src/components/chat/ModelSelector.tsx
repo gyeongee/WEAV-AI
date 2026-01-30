@@ -54,14 +54,21 @@ const ModelSelectorComponent: React.FC<ModelSelectorProps> = ({ selectedModel, o
       default: return <Box size={16} className="text-neutral-400" />;
     }
   };
+  
 
-  const groupedModels = useMemo(() => {
-    return MODELS.reduce((acc, model) => {
-      if (!acc[model.category]) acc[model.category] = [];
-      acc[model.category].push(model);
-      return acc;
-    }, {} as Record<ModelCategory, AIModel[]>);
-  }, []);
+  const groupedModels = MODELS.reduce((acc, model) => {
+  if (!acc[model.category]) acc[model.category] = [];
+  acc[model.category].push(model);
+  return acc;
+}, {} as Record<ModelCategory, AIModel[]>);
+
+  // const groupedModels = useMemo(() => {
+  //   return MODELS.reduce((acc, model) => {
+  //     if (!acc[model.category]) acc[model.category] = [];
+  //     acc[model.category].push(model);
+  //     return acc;
+  //   }, {} as Record<ModelCategory, AIModel[]>);
+  // }, []);
 
   const categories: ModelCategory[] = useMemo(() => ['LLM', 'Image', 'Video'], []);
 
