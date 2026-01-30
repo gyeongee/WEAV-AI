@@ -13,5 +13,17 @@ export const MODEL_CONFIGS = {
         resolutions: ['720p'],
         aspectRatios: ['16:9', '9:16'],
         maxDuration: 12
-    }
+    },
+    kling: {
+    id: 'fal-ai/kling-video/v2.1/standard/image-to-video',
+    name: 'Kling 2.1',
+    styles: [
+      { id: 'cinematic', name: '시네마틱', desc: '자연스러운 영상미' },
+      { id: 'anime', name: '애니메이션', desc: '애니 스타일' },
+    ],
+    durations: ['4', '8'],
+    resolutions: ['720p', '1080p'],
+    aspectRatios: ['16:9'],
+    maxDuration: 8,
+  }
 } as const;
