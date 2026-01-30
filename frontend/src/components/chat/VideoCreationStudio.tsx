@@ -108,8 +108,15 @@ export const VideoCreationStudio: React.FC<VideoCreationStudioProps> = ({
         setTimeout(onClose, 500);
     };
 
-    const modelKey = selectedModel.model === 'fal-ai/sora-2/text-to-video' ? 'videoPro' : 'videoPro';
-    const config = MODEL_CONFIGS[modelKey];
+    const modelKey = Object.keys(MODEL_CONFIGS).find(
+  key => MODEL_CONFIGS[key].id === selectedModel.model
+);
+
+const config = modelKey ? MODEL_CONFIGS[modelKey] : null;
+
+
+    // const modelKey = selectedModel.model === 'fal-ai/sora-2/text-to-video' ? 'videoPro' : 'videoPro';
+    // const config = MODEL_CONFIGS[modelKey];
 
     // Auto-correct invalid options (e.g. 1080p when only 720p is allowed)
     useEffect(() => {
