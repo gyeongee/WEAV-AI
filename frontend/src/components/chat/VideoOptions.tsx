@@ -27,8 +27,17 @@ export const VideoOptions: React.FC<VideoOptionsProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const modelKey = model.model === 'fal-ai/sora-2/text-to-video' ? 'videoPro' : 'videoPro';
-  const config = MODEL_CONFIGS[modelKey];
+  const modelKey = Object.keys(MODEL_CONFIGS).find(
+  key => MODEL_CONFIGS[key].id === selectedModel.model
+);
+
+const config = modelKey ? MODEL_CONFIGS[modelKey] : null;
+
+
+  
+
+  // const modelKey = model.model === 'fal-ai/sora-2/text-to-video' ? 'videoPro' : 'videoPro';
+  // const config = MODEL_CONFIGS[modelKey];
 
   const updateOption = <K extends keyof VideoOptions>(key: K, value: VideoOptions[K]) => {
     onOptionsChange({ ...options, [key]: value });
