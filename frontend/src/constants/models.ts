@@ -11,5 +11,5 @@ export const MODELS: AIModel[] = [
 
   // Video Series
   { model: 'fal-ai/sora-2/text-to-video', name: 'Sora 2', category: 'Video', provider: 'fal', isVideo: true },
-  { model: 'fal-ai/kling-video/v2.1/standard/image-to-video', name: 'kling-video', category: 'Video', provider: 'fal', isVideo: true },
+  { model: 'fal-ai/kling-video/v2.1/standard/image-to-video', name: 'Kling 2.1', category: 'Video', provider: 'fal', isVideo: true },
 ];
